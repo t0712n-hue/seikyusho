@@ -549,7 +549,11 @@ body{min-height:100vh;background:#f4f6f9;color:#333a45;font-family:'Noto Sans JP
   <div class="modal-overlay" id="ivm-overlay" onclick="if(event.target===this)ivmClose()">
     <div class="modal" onclick="event.stopPropagation()" style="width:440px">
       <div class="ivm-head"><div class="modal-title">📄 PDFができました</div><button class="ivm-x" onclick="ivmClose()" title="閉じる">✕</button></div>
-      <div id="ivm-name" style="font-size:12px;color:#555;margin-bottom:10px;word-break:break-all"></div>
+      <div id="ivm-name" style="font-size:12px;color:#555;margin-bottom:8px;word-break:break-all"></div>
+      <div style="display:flex;align-items:center;gap:8px;background:#f4f8ff;border:1px solid #d6e4f7;border-radius:8px;padding:8px 10px;margin-bottom:10px">
+        <div style="flex:1;min-width:0"><div style="font-size:10.5px;color:#8a93a2;font-weight:700">件名</div><div id="ivm-subj" style="font-size:13px;word-break:break-all"></div></div>
+        <button class="btn btn-blue" style="flex:none;padding:8px 12px" onclick="ivmCopySubject(this)">コピー</button>
+      </div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-green" id="ivm-share" style="padding:14px;font-size:15px" onclick="ivmShare()">📤 メールで送る（Gmail・キャリアメール等）</button>
         <div id="ivm-note" style="font-size:11.5px;color:#667383;line-height:1.5"></div>
@@ -1499,34 +1503,67 @@ function ivDownloadPdf(){
     var out = ivmMakePdf(r), mt = ivMailTexts(inv);
     var cli = ivClients().find(function(c){ return c.id === inv.clientId; });
     ivmBusy(false);
-    ivmSheet({bytes:out.bytes, name:ivFileName(inv), preview:out.preview, pages:out.pages, invId:inv.id,
+    ivmSheet({bytes:out.bytes, name:ivFileName(inv), number:inv.number, preview:out.preview, pages:out.pages, invId:inv.id,
       to:(cli && cli.email) || '', subject:mt.subject, body:mt.body});
   }).catch(function(e){
     ivmBusy(false); if(!wasOpen) ivHidePreview();
     notify('PDFを作れませんでした: ' + ((e && e.message) || e), 'error');
   });
 }
+// メールで送る添付のファイル名は英数字だけにする。
+// キャリアメール等は日本語のファイル名を扱えず「請求書_23.pdf」が「____23.pdf」になるため。
+function ivmMailFileName(name, number){
+  var s = String(name || '').replace(/[.]pdf$/i, '');
+  s = s.split('請求書').join('Invoice').split('年').join('-').split('月').join('').split('日').join('');
+  s = s.replace(/[^ -~]/g, '').replace(/[ ]+/g, '_').replace(/[\\/:*?"<>|]/g, '_');
+  s = s.replace(/_{2,}/g, '_').replace(/^[_.\- ]+/, '').replace(/[_.\- ]+$/, '');
+  var num = String(number || '').replace(/[^ -~]/g, '').replace(/[\\/:*?"<>|]/g, '_').trim();
+  if(!/[A-Za-z0-9]/.test(s)) s = 'Invoice' + (num ? '_' + num : '');
+  else if(num && s.indexOf(num) < 0) s = s + '_' + num;
+  return s + '.pdf';
+}
 var _ivmD = null, _ivmFile = null, _ivmUrl = '';
 function ivmSheet(d){
   _ivmD = d;
+  d.mailName = ivmMailFileName(d.name, d.number);
   if(_ivmUrl){ try{ URL.revokeObjectURL(_ivmUrl); }catch(e){} }
   _ivmUrl = URL.createObjectURL(new Blob([d.bytes], {type:'application/pdf'}));
   _ivmFile = null;
-  try{ _ivmFile = new File([d.bytes], d.name, {type:'application/pdf'}); }catch(e){}
+  try{ _ivmFile = new File([d.bytes], d.mailName, {type:'application/pdf'}); }catch(e){}
   var canShare = false;
   try{ canShare = !!(_ivmFile && navigator.canShare && navigator.canShare({files:[_ivmFile]})); }catch(e){}
-  document.getElementById('ivm-name').textContent = d.name + (d.pages > 1 ? '（' + d.pages + 'ページ）' : '');
+  document.getElementById('ivm-name').textContent = '添付ファイル名: ' + d.mailName + (d.pages > 1 ? '（' + d.pages + 'ページ）' : '');
+  document.getElementById('ivm-subj').textContent = d.subject || '（件名なし）';
   document.getElementById('ivm-prev').src = d.preview;
   document.getElementById('ivm-share').style.display = canShare ? '' : 'none';
   document.getElementById('ivm-note').textContent = canShare
-    ? '共有メニューで「Gmail」や「メール」（iPhone）、「ドコモメール」「auメール」等を選ぶと、PDFが添付された状態で開きます。宛先を入れて送信してください。'
+    ? '共有メニューで「Gmail」や「メール」（iPhone）、「ドコモメール」「auメール」等を選ぶと、PDFが添付された状態で開きます。件名は押した時に自動でコピーされるので、件名が空なら件名欄を長押し→「ペースト」してください。'
     : 'このブラウザは共有に対応していません。「⬇ PDFを保存」してから、メールアプリで添付してください。';
   document.getElementById('ivm-sent-msg').textContent = '';
   document.getElementById('ivm-overlay').classList.add('open');
 }
 function ivmClose(){ document.getElementById('ivm-overlay').classList.remove('open'); }
+// 件名をクリップボードへ（iPhoneの共有メニューやキャリアメールは件名を受け取らないため、貼り付けで入れてもらう）
+function ivmCopyText(text){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+  }catch(e){}
+  try{
+    var t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', '');
+    t.style.cssText = 'position:fixed;top:0;left:0;opacity:0'; document.body.appendChild(t);
+    t.select(); document.execCommand('copy'); t.remove();
+  }catch(e){}
+  return Promise.resolve();
+}
+function ivmCopySubject(btn){
+  if(!_ivmD || !_ivmD.subject) return;
+  ivmCopyText(_ivmD.subject);
+  if(btn){ var o = btn.textContent; btn.textContent = '✓ コピー済み'; setTimeout(function(){ btn.textContent = o; }, 1500); }
+}
 function ivmShare(){
   if(!_ivmFile) return;
+  // 共有より先に件名をコピーしておく（共有の後だと端末によっては操作の許可が切れる）
+  if(_ivmD.subject){ try{ ivmCopyText(_ivmD.subject).then(function(){}, function(){}); }catch(e){} }
   var data = {files:[_ivmFile]};
   if(_ivmD.subject) data.title = _ivmD.subject;
   if(_ivmD.body && !ivmShare.noText) data.text = _ivmD.body;
