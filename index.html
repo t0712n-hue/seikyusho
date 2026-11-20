@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2c7be5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="請求書">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="color-scheme" content="light">
+<title>請求書作成</title>
+<style>
+:root{color-scheme:light;}
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{color-scheme:light;}
+body{min-height:100vh;background:#f4f6f9;color:#333a45;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;font-size:14px;}
+
+.notif{position:fixed;top:18px;right:18px;z-index:9999;padding:11px 20px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(30,40,60,.18);display:none;}
+.notif.success{background:#e6f7ec;border:1px solid #27ae60;color:#1a7f37;}
+.notif.error{background:#fdeaea;border:1px solid #e74c3c;color:#d64545;}
+.notif.info{background:#e8f1fd;border:1px solid #2c7be5;color:#1a5bb8;}
+
+.modal-overlay{position:fixed;inset:0;z-index:8000;background:rgba(30,40,60,.45);display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#ffffff;border:1px solid #d8dfe8;border-radius:14px;padding:26px;width:440px;max-width:96vw;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;}
+.modal-field{margin-bottom:13px;}
+.modal-label{font-size:11px;color:#666;margin-bottom:5px;font-weight:700;letter-spacing:.5px;}
+.modal-inp{width:100%;padding:8px 11px;border-radius:7px;background:#f4f6f9;border:1px solid #d8dfe8;color:#333a45;font-size:13px;outline:none;font-family:inherit;}
+.modal-inp:focus{border-color:#2c7be5;}
+.color-picker{display:flex;gap:8px;flex-wrap:wrap;}
+.color-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s;}
+.color-dot.selected{border-color:#333a45;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+
+.main{max-width:1180px;margin:0 auto;padding:20px 18px;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;flex-wrap:wrap;gap:8px;}
+.toolbar-info{font-size:13px;color:#555;}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+
+.btn{padding:7px 13px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;font-family:inherit;}
+.btn-blue{background:#eef2f7;color:#2c7be5;border:1px solid #cfe0f8;}
+.btn-green{background:#eef2f7;color:#1a7f37;border:1px solid #bfe3cb;}
+.btn-amber{background:#eef2f7;color:#b58900;border:1px solid #f0e2b6;}
+.btn-red{background:#eef2f7;color:#d64545;border:1px solid #f5c6c6;}
+.btn-purple{background:#eef2f7;color:#7c3aed;border:1px solid #e6dcfb;}
+#ledger-src-toggle .btn.active{background:linear-gradient(135deg,#2c7be5,#7c3aed);color:#fff;border-color:transparent;}
+.btn-primary{padding:9px 22px;border-radius:9px;border:none;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#2c7be5,#7c3aed);color:#fff;font-size:13px;font-weight:700;box-shadow:0 4px 16px rgba(44,123,229,.25);}
+.btn-xs{padding:4px 10px;border-radius:5px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;}
+.btn-xs-red{background:#fdeaea;color:#d64545;}
+.btn-xs-blue{background:#eef2f7;color:#2c7be5;border:1px solid #cfe0f8;}
+.btn-xs-amber{background:#fdf6e3;color:#b58900;border:1px solid #f0e2b6;}
+
+.prev-tbl{width:100%;border-collapse:separate;border-spacing:0 3px;font-size:12px;min-width:680px;}
+.prev-tbl th{padding:7px 10px;text-align:left;font-size:11px;color:#666;font-weight:700;}
+.prev-tbl td{padding:8px 10px;background:#ffffff;}
+.prev-tbl td:first-child{border-radius:7px 0 0 7px;}
+.prev-tbl td:last-child{border-radius:0 7px 7px 0;}
+.td-g{color:#1a7f37;}
+
+.empty-msg{text-align:center;padding:50px;color:#9aa4b2;line-height:2.2;}
+
+.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:13px;}
+.filter-row select,.filter-row input{padding:6px 10px;border-radius:6px;background:#ffffff;border:1px solid #e2e7ee;color:#333a45;font-size:12px;font-family:inherit;}
+.tbl-ow{overflow-x:auto;}
+.dl-bar{margin-top:18px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:#f4f6f9;}
+::-webkit-scrollbar-thumb{background:#c9d2dd;border-radius:3px;}
+
+/* ===== 請求書タブ（ライトテーマ：単体アプリ準拠で見やすく） ===== */
+#tab-invoice{background:#f4f6f9;border-radius:14px;padding:18px;color:#333a45;}
+#tab-invoice .iv-nav button{background:#fff;border:1px solid #dde2e8;color:#8a93a2;}
+#tab-invoice .iv-nav button.active{background:#e8f1fd;color:#2c7be5;border-color:#b9d4f8;font-weight:700;}
+#tab-invoice .iv-nav button:hover{background:#f0f3f7;}
+#tab-invoice .toolbar-info{color:#8a93a2;}
+#tab-invoice .empty-msg{color:#8a93a2;background:#fff;border:1px dashed #dde2e8;border-radius:10px;padding:28px;}
+#tab-invoice .filter-row select,#tab-invoice .filter-row input{background:#fff;border:1px solid #dde2e8;color:#333a45;width:auto;}
+/* テーブル（一覧・明細・取引先） */
+#tab-invoice .prev-tbl th{color:#8a93a2;}
+#tab-invoice .prev-tbl td{background:#fff;color:#333a45;border-bottom:1px solid #eef1f5;}
+#tab-invoice .prev-tbl .td-g{color:#1a7f37;font-weight:700;}
+/* ボタン（ライト配色に差し替え） */
+#tab-invoice .btn{border:1px solid #dde2e8;}
+#tab-invoice .btn-green{background:#2c7be5;color:#fff;border-color:#2c7be5;}
+#tab-invoice .btn-green:hover{background:#1a5bb8;}
+#tab-invoice .btn-blue{background:#eef1f5;color:#333a45;}
+#tab-invoice .btn-amber{background:#fff;color:#b58900;border-color:#e8d9a0;}
+#tab-invoice .btn-xs-blue{background:#e8f1fd;color:#2c7be5;border:1px solid #b9d4f8;}
+#tab-invoice .btn-xs-red{background:#fdeaea;color:#e55353;}
+#tab-invoice .iv-sub{display:none;}
+#tab-invoice .iv-sub.active{display:block;}
+#tab-invoice .iv-nav{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+#tab-invoice .iv-nav button{padding:7px 15px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;}
+#tab-invoice .iv-card{background:#fff;border:1px solid #dde2e8;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(30,40,60,.05);}
+#tab-invoice .iv-card h3{font-size:13px;color:#333a45;margin:0 0 12px;padding-bottom:7px;border-bottom:2px solid #2c7be5;display:inline-block;}
+#tab-invoice label.iv-l{display:block;font-size:11px;color:#8a93a2;margin-bottom:3px;font-weight:700;}
+#tab-invoice .iv-row{display:flex;gap:12px;margin-bottom:11px;flex-wrap:wrap;}
+#tab-invoice .iv-row>div{flex:1;min-width:120px;}
+#tab-invoice input,#tab-invoice select,#tab-invoice textarea{width:100%;padding:7px 9px;border:1px solid #dde2e8;border-radius:6px;background:#fff;color:#333a45;font-size:13px;font-family:inherit;}
+#tab-invoice input:focus,#tab-invoice select:focus,#tab-invoice textarea:focus{outline:none;border-color:#2c7be5;}
+#tab-invoice textarea{resize:vertical;}
+#tab-invoice .iv-totals{margin-left:auto;width:340px;margin-top:12px;}
+#tab-invoice .iv-trow{display:flex;justify-content:space-between;padding:5px 8px;font-size:13px;}
+#tab-invoice .iv-trow.sub{color:#8a93a2;font-size:11px;}
+#tab-invoice .iv-trow.grand{border-top:2px solid #333a45;font-size:17px;font-weight:700;color:#1a7f37;margin-top:4px;padding-top:8px;}
+#tab-invoice .iv-status{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+#tab-invoice td.iv-drag{cursor:grab;color:#8a93a2;user-select:none;-webkit-user-select:none;touch-action:none;text-align:center;font-size:15px;vertical-align:middle;}
+#tab-invoice textarea.iv-i-note{margin-top:3px;font-size:11px;color:#667383;padding:4px 7px;}
+#tab-invoice .iv-qty-wrap{display:flex;align-items:stretch;gap:0;}
+#tab-invoice .iv-qty-wrap input.iv-i-qty{text-align:center;border-radius:0;padding:7px 2px;min-width:0;}
+#tab-invoice .iv-qty-btn{flex:0 0 26px;border:1px solid #dde2e8;background:#f4f6f9;color:#333a45;font-size:14px;cursor:pointer;padding:0;font-family:inherit;user-select:none;}
+#tab-invoice .iv-qty-btn:hover{background:#e8f1fd;color:#2c7be5;}
+#tab-invoice .iv-qty-btn[data-d="-1"]{border-radius:6px 0 0 6px;border-right:none;}
+#tab-invoice .iv-qty-btn[data-d="1"]{border-radius:0 6px 6px 0;border-left:none;}
+#tab-invoice td.iv-drag:hover{color:#2c7be5;}
+#tab-invoice tr.iv-dragging{opacity:.55;}
+#tab-invoice tr.iv-dragging td{background:#e8f1fd !important;}
+#tab-invoice .iv-st-draft{background:#eef1f5;color:#8a93a2;}
+#tab-invoice .iv-st-sent{background:#e8f1fd;color:#2c7be5;}
+#tab-invoice .iv-st-paid{background:#e6f7ec;color:#1a7f37;}
+/* A4プレビュー（印刷は白基調のまま） */
+#invPreviewOverlay{display:none;position:fixed;inset:0;background:rgba(10,12,20,.8);z-index:9000;overflow:auto;padding:24px;}
+#invPreviewOverlay.show{display:block;}
+#invPreviewOverlay .pv-actions{max-width:210mm;margin:0 auto 12px;display:flex;gap:8px;justify-content:flex-end;}
+.iv-a4{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#333;padding:15mm 14mm 20mm;box-shadow:0 4px 24px rgba(0,0,0,.4);position:relative;font-size:12px;line-height:1.6;font-family:"Yu Gothic UI","Meiryo",sans-serif;}
+.iv-a4 h1{text-align:center;font-size:25px;letter-spacing:4px;margin:0 0 26px;font-weight:bold;color:#333;}
+.iv-a4 .inv-head{display:flex;justify-content:space-between;margin-bottom:20px;}
+.iv-a4 .inv-to{width:55%;}
+.iv-a4 .inv-to .to-name{font-size:15px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:4px;}
+.iv-a4 .inv-from{width:40%;font-size:12px;position:relative;padding-right:58px;}
+.iv-a4 .stamp-img{position:absolute;right:0;top:2px;width:50px;height:50px;object-fit:contain;}
+.iv-a4 .inv-from .from-name{font-size:13px;margin-bottom:8px;font-weight:bold;}
+.iv-a4 .inv-nums{margin-top:12px;}
+.iv-a4 .inv-nums .k{display:inline-block;min-width:6.5em;}
+.iv-a4 .stamp{position:absolute;right:0;top:0;width:56px;height:56px;border:2px solid #d33;border-radius:50%;color:#d33;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;opacity:.85;}
+.iv-a4 .subject-line{font-size:13px;margin-bottom:14px;}
+.iv-a4 .grand-box{border:1px solid #bbb;padding:10px 18px;margin-bottom:20px;display:flex;align-items:baseline;gap:28px;}
+.iv-a4 .grand-box .lbl{font-size:14px;font-weight:bold;}
+.iv-a4 .grand-box .amt{font-size:20px;font-weight:bold;}
+.iv-a4 table.items{width:100%;border-collapse:collapse;}
+.iv-a4 table.items th{border:none;border-top:1px solid #555;border-bottom:1px solid #555;background:none;color:#333;font-size:11px;font-weight:normal;padding:6px 8px;text-align:left;}
+.iv-a4 table.items td{border:none;border-bottom:1px solid #e4e4e4;padding:8px;font-size:12px;vertical-align:top;color:#333;}
+.iv-a4 table.items tbody tr:nth-child(even){background:#f7f7f7;}
+.iv-a4 .item-detail{color:#999;font-size:11px;line-height:1.5;}
+.iv-a4 .tax-note{font-size:10px;color:#777;margin-top:4px;}
+.iv-a4 .sum-flex{display:flex;justify-content:space-between;align-items:flex-start;margin-top:2px;}
+.iv-a4 .tax-breakdown{width:46%;margin-top:26px;font-size:11px;}
+.iv-a4 .tax-breakdown table{width:100%;border-collapse:collapse;}
+.iv-a4 .tax-breakdown th,.iv-a4 .tax-breakdown td{border:none;border-bottom:1px solid #ddd;padding:4px 8px;font-size:11px;font-weight:normal;text-align:right;color:#333;background:none;}
+.iv-a4 .tax-breakdown th:first-child,.iv-a4 .tax-breakdown td:first-child{text-align:left;}
+.iv-a4 .sum-table{width:44%;}
+.iv-a4 .sum-table .srow{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #ccc;font-size:12px;}
+.iv-a4 .sum-table .srow.total{border-bottom:2px solid #555;font-size:17px;font-weight:bold;padding-top:10px;}
+.iv-a4 .box-label{margin:20px 0 4px;font-size:12px;}
+.iv-a4 .boxed{border:1px solid #bbb;padding:10px 14px;min-height:52px;font-size:12px;white-space:pre-wrap;}
+.iv-a4 .page-num{position:absolute;bottom:8mm;left:0;right:0;text-align:center;font-size:11px;color:#666;}
+@media print{
+  body *{visibility:hidden;}
+  #invPreviewOverlay,#invPreviewOverlay *{visibility:visible;}
+  #invPreviewOverlay{position:absolute;inset:0;background:#fff;padding:0;overflow:visible;}
+  #invPreviewOverlay .pv-actions{display:none;}
+  .iv-a4{box-shadow:none;width:auto;min-height:auto;margin:0;padding:10mm 8mm;}
+  @page{size:A4;margin:8mm;}
+}
+
+/* ===== 請求書タブ：スマホ（v60） ===== */
+#iv-mbar,#iv-mspacer{display:none;}
+.iv-mmore{display:none;}
+@media print{ .iv-a4{zoom:1 !important;} #iv-mbar,.iv-mmore{display:none !important;} }
+@media (max-width:760px){
+  #tab-invoice{padding:10px;border-radius:10px;}
+  #tab-invoice .iv-nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:10px;}
+  #tab-invoice .iv-nav::-webkit-scrollbar{display:none;}
+  #tab-invoice .iv-nav button{flex:0 0 auto;padding:8px 12px;font-size:12.5px;}
+  #tab-invoice .iv-card{padding:12px;}
+  #tab-invoice .iv-row>div{flex:1 1 calc(50% - 4px);min-width:0;}
+  #tab-invoice .iv-row>div.iv-full{flex:1 1 100% !important;}
+  #tab-invoice .iv-numbox{flex-wrap:wrap;}
+  #tab-invoice .iv-numbox input{flex:1 1 100% !important;min-width:0 !important;}
+  #tab-invoice .iv-numbox select{flex:1 1 0 !important;min-width:0 !important;max-width:none !important;}
+  #tab-invoice .filter-row{display:flex;flex-wrap:wrap;gap:6px;}
+  #tab-invoice .filter-row input,#tab-invoice .filter-row select{flex:1 1 100%;width:100% !important;}
+  /* 編集画面: 上のボタン列は隠し、下部固定バーへ */
+  #iv-edit>.toolbar>.btn-row{display:none;}
+  #iv-edit>.toolbar{flex-wrap:nowrap;align-items:center;}
+  #iv-mspacer{display:block;height:84px;}
+  #iv-mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:850;gap:6px;background:#fff;border-top:1px solid #dde2e8;box-shadow:0 -3px 12px rgba(30,40,60,.10);padding:8px 10px calc(8px + env(safe-area-inset-bottom));}
+  #iv-mbar button{flex:1 1 0;min-width:0;padding:11px 4px;font-size:13.5px;border-radius:9px;white-space:nowrap;font-weight:700;}
+  #iv-mbar .iv-mb-more{flex:0 0 52px;font-size:18px;}
+  .iv-mmore.open{display:flex;flex-direction:column;gap:6px;position:fixed;left:10px;right:10px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:860;background:#fff;border:1px solid #dde2e8;border-radius:12px;padding:10px;box-shadow:0 6px 24px rgba(30,40,60,.18);}
+  .iv-mmore button{padding:13px 12px;font-size:14px;text-align:left;border-radius:8px;}
+  /* 明細: 1行＝1カード */
+  #tab-invoice #iv-items-table{min-width:0 !important;table-layout:auto !important;width:100%;border-spacing:0;}
+  #iv-items-table thead{display:none;}
+  #iv-items-table,#iv-items-table tbody{display:block;}
+  #iv-items-table tr{display:grid;grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 38px;grid-template-areas:"drag name name del" "drag date tax tax" "drag qty unit unit" "drag price amt amt";gap:7px 8px;padding:12px 2px 14px;border-bottom:2px solid #dde2e8;}
+  #iv-items-table tr:last-child{border-bottom:none;}
+  #iv-items-table td{display:block;border:none !important;border-radius:0 !important;padding:0 !important;min-width:0;background:transparent !important;}
+  #iv-items-table td.ivc-drag{grid-area:drag;display:flex;align-items:center;justify-content:center;font-size:19px;}
+  #iv-items-table td.ivc-name{grid-area:name;}
+  #iv-items-table td.ivc-date{grid-area:date;}
+  #iv-items-table td.ivc-tax{grid-area:tax;}
+  #iv-items-table td.ivc-qty{grid-area:qty;}
+  #iv-items-table td.ivc-unit{grid-area:unit;}
+  #iv-items-table td.ivc-price{grid-area:price;}
+  #iv-items-table td.ivc-amt{grid-area:amt;text-align:right !important;font-weight:700;font-size:16px;color:#1a7f37;align-self:end;padding-bottom:8px !important;}
+  #iv-items-table td.ivc-del{grid-area:del;align-self:start;}
+  #iv-items-table td.ivc-del button{width:36px;height:36px;font-size:14px;padding:0;}
+  #iv-items-table td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;color:#8a93a2;font-weight:700;margin-bottom:3px;text-align:left;}
+  #iv-items-table textarea.iv-i-name{min-height:40px;}
+  #tab-invoice .iv-qty-btn{flex:0 0 42px;font-size:19px;}
+  #tab-invoice .iv-qty-wrap input.iv-i-qty{padding:9px 2px;}
+  /* 一覧・取引先: 1件＝1カード */
+  #iv-list-table thead,#iv-clients-table thead{display:none;}
+  #iv-list-table,#iv-list-table tbody,#iv-clients-table,#iv-clients-table tbody{display:block;min-width:0 !important;}
+  #iv-list-table tr,#iv-clients-table tr{display:grid;gap:3px 10px;padding:11px 8px;margin-bottom:8px;background:#fff;border:1px solid #dde2e8;border-radius:10px;}
+  #iv-list-table td,#iv-clients-table td{display:block;border:none !important;border-radius:0 !important;padding:0 !important;background:transparent !important;min-width:0;font-size:13px !important;}
+  #iv-list-table tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"num st" "cli amt" "sub sub" "dt due" "ops ops";}
+  #iv-list-table td:nth-child(1){grid-area:num;font-size:11.5px !important;color:#8a93a2;}
+  #iv-list-table td:nth-child(2){grid-area:cli;font-weight:700;font-size:14.5px !important;}
+  #iv-list-table td:nth-child(3){grid-area:sub;color:#667383;}
+  #iv-list-table td:nth-child(4){grid-area:dt;font-size:11.5px !important;color:#667383;}
+  #iv-list-table td:nth-child(5){grid-area:due;font-size:11.5px !important;color:#667383;text-align:right;}
+  #iv-list-table td:nth-child(4)::before{content:"請求日 ";}
+  #iv-list-table td:nth-child(5)::before{content:"期限 ";}
+  #iv-list-table td:nth-child(6){grid-area:amt;font-size:15px !important;align-self:center;}
+  #iv-list-table td:nth-child(7){grid-area:st;justify-self:end;}
+  #iv-list-table td:nth-child(8),#iv-clients-table td:nth-child(5){grid-area:ops;display:flex;gap:6px;justify-content:flex-end;margin-top:6px;}
+  #iv-list-table td:nth-child(8) button,#iv-clients-table td:nth-child(5) button{padding:7px 14px;font-size:12.5px;}
+  #iv-clients-table tr{grid-template-columns:minmax(0,1fr);grid-template-areas:"name" "per" "addr" "mail" "ops";}
+  #iv-clients-table td:nth-child(1){grid-area:name;font-weight:700;font-size:14.5px !important;}
+  #iv-clients-table td:nth-child(2){grid-area:per;}
+  #iv-clients-table td:nth-child(3){grid-area:addr;color:#667383;}
+  #iv-clients-table td:nth-child(4){grid-area:mail;color:#667383;word-break:break-all;}
+  /* プレビュー: 画面幅に縮小（JSで zoom）・操作ボタンは上に固定 */
+  #invPreviewOverlay{padding:8px;}
+  #invPreviewOverlay .pv-actions{position:sticky;top:-8px;z-index:2;max-width:none;margin:-8px -8px 8px;padding:8px;background:rgba(10,12,20,.92);}
+  #invPreviewOverlay .pv-actions .btn{flex:1 1 0;padding:10px 4px;}
+}
+/* ---- 配布版の外枠 ---- */
+.app-header{background:linear-gradient(135deg,#eef1f6,#f4f6f9);border-bottom:1px solid #d8dfe8;padding:13px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.app-logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#2c7be5,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.app-title{font-size:15px;font-weight:700;}
+.app-sub{font-size:11px;color:#8a93a2;margin-top:2px;}
+.app-note{margin-left:auto;font-size:11px;color:#8a93a2;background:#ffffff;border:1px solid #e2e7ee;border-radius:7px;padding:5px 11px;}
+#tab-invoice{display:block;}
+@media print{ .app-header{display:none;} }
+
+/* ---- スマホ版 ---- */
+#ivm-busy{position:fixed;inset:0;z-index:99999;background:rgba(255,255,255,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:15px;font-weight:700;color:#333a45;}
+.ivm-spin{width:40px;height:40px;border:4px solid #dde2e8;border-top-color:#2c7be5;border-radius:50%;animation:ivmspin .9s linear infinite;}
+@keyframes ivmspin{to{transform:rotate(360deg);}}
+#ivm-overlay .modal{max-height:92vh;overflow:auto;padding-top:0;}
+.ivm-head{position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:16px 0 8px;margin-bottom:4px;}
+.ivm-head .modal-title{margin:0;}
+.ivm-x{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid #dde2e8;background:#f4f6f9;color:#333a45;font-size:17px;cursor:pointer;}
+@media (max-width:760px){
+  /* 外枠の余白を1重に（画面→カードの2段だけ） */
+  .app-header{padding:10px 12px;gap:10px;}
+  .app-note{margin-left:0;width:100%;font-size:10.5px;padding:4px 9px;}
+  .main{padding:10px 8px;}
+  #tab-invoice{padding:0 !important;background:transparent !important;border-radius:0 !important;}
+  #tab-invoice .iv-card{padding:12px;border-radius:12px;}
+  /* 上のタブは4つを1行に収める（横スクロールで切れない） */
+  #tab-invoice .iv-nav{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;overflow:visible;}
+  #tab-invoice .iv-nav button{padding:9px 2px !important;font-size:11.5px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  /* iPhoneで入力時に画面が勝手に拡大されないよう16px */
+  #tab-invoice input,#tab-invoice select,#tab-invoice textarea,.modal-inp{font-size:16px !important;}
+  #tab-invoice input[type=checkbox]{width:auto !important;}
+  /* 合計欄は固定幅をやめてカード幅に */
+  #tab-invoice .iv-totals{width:auto !important;max-width:100%;margin-left:0;}
+  #tab-invoice .iv-trow{padding:5px 2px;}
+  #tab-invoice .iv-trow.grand{font-size:18px;}
+  /* 明細カード: 納品日・数量・単価の列を広げる */
+  #iv-items-table tr{grid-template-columns:20px minmax(0,1.2fr) minmax(0,.8fr) 36px !important;gap:8px 7px !important;}
+  #iv-items-table td.ivc-drag{font-size:17px;color:#b5bdc9;}
+  #iv-items-table input.iv-i-date{padding:8px 6px;min-width:0;}
+  #iv-items-table textarea.iv-i-name,#iv-items-table textarea.iv-i-note{overflow:hidden;resize:none;line-height:1.45;}
+  #iv-items-table textarea.iv-i-note{color:#667383;}
+  #iv-items-table input.iv-i-pick{font-size:13px !important;}
+  /* 取引先・自社設定のフォームは2列にせず1列 */
+  #iv-clients .iv-row>div,#iv-settings .iv-row>div{flex:1 1 100% !important;max-width:100%;}
+  #iv-s-bank,#iv-f-bank,#iv-f-notes{min-height:124px;}
+  /* ポップアップ */
+  .modal{padding:0 16px 16px;margin:0 8px;width:auto !important;border-radius:14px;}
+  .modal-overlay .modal>.modal-title:first-child{padding-top:16px;}
+  #ivm-overlay .modal{max-height:90vh;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-logo">🧾</div>
+  <div>
+    <div class="app-title">請求書作成</div>
+    <div class="app-sub">スマホでPDFを作ってメールで送れます／インボイス対応</div>
+  </div>
+  <div class="app-note">💾 データはこのスマホ（ブラウザ）の中だけに保存されます。機種変更の前に「⬆ バックアップ」を</div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<div class="main">
+  <div class="tab-panel" id="tab-invoice">
+    <div class="iv-nav">
+      <button data-iv="list" class="active" onclick="ivSwitch('list')">📋 請求書一覧</button>
+      <button data-iv="edit" onclick="ivNew()">＋ 新規作成</button>
+      <button data-iv="clients" onclick="ivSwitch('clients')">🏢 取引先</button>
+      <button data-iv="settings" onclick="ivSwitch('settings')">⚙ 自社設定</button>
+    </div>
+
+    <!-- 一覧 -->
+    <div id="iv-list" class="iv-sub active">
+      <div class="toolbar">
+        <div class="toolbar-info" id="iv-list-info">—</div>
+        <div class="btn-row">
+          <button class="btn btn-blue" onclick="ivExportJson()">⬆ バックアップ</button>
+          <button class="btn btn-blue" onclick="document.getElementById('iv-import-file').click()">⬇ 復元</button>
+          <input type="file" id="iv-import-file" accept="application/json,.json" style="display:none" onchange="ivImportJson(this)">
+          <button class="btn btn-green" onclick="ivNew()">＋ 新規請求書</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <input type="text" id="iv-search" placeholder="🔍 取引先・件名・番号" style="width:240px" oninput="ivRenderList()">
+        <select id="iv-status-filter" onchange="ivRenderList()">
+          <option value="">全ステータス</option><option value="draft">下書き</option>
+          <option value="sent">送付済み</option><option value="paid">入金済み</option>
+        </select>
+      </div>
+      <div class="tbl-ow"><table class="prev-tbl" id="iv-list-table"></table></div>
+      <div id="iv-list-empty" class="empty-msg" style="display:none">請求書がありません。「＋ 新規作成」から作成してください。</div>
+
+
+    </div>
+
+    <!-- 作成・編集 -->
+    <div id="iv-edit" class="iv-sub">
+      <div class="toolbar">
+        <button class="btn btn-blue" onclick="ivSwitch('list')">← 一覧へ</button>
+        <div class="toolbar-info" id="iv-edit-info">新規請求書</div>
+        <div class="btn-row">
+          <button class="btn btn-amber" onclick="ivShowPreview()">👁 プレビュー</button>
+          <button class="btn btn-amber" onclick="ivDownloadPdf()">📤 PDFを作って送る</button>
+          <button class="btn btn-blue" onclick="ivCopyMailText()">📋 メール文コピー</button>
+          <button class="btn btn-green" onclick="ivSave()">💾 保存</button>
+        </div>
+      </div>
+      <div class="iv-sched-banner" id="iv-sched-banner"></div>
+      <div class="iv-card">
+        <h3>基本情報</h3>
+        <div class="iv-row">
+          <div class="iv-full"><label class="iv-l">請求書番号</label>
+            <div class="iv-numbox" style="display:flex;gap:6px">
+              <input type="text" id="iv-f-number" style="flex:1;min-width:110px">
+              <select id="iv-f-numrule" style="flex:none;max-width:130px" title="採番規則を選択"></select>
+              <button class="btn btn-blue" style="flex:none;padding:7px 11px" onclick="ivRenumber()" title="選択した規則で採番し直す">⟳</button>
+            </div>
+          </div>
+          <div><label class="iv-l">ステータス</label><select id="iv-f-status"><option value="draft">下書き</option><option value="sent">送付済み</option><option value="paid">入金済み</option></select></div>
+          <div><label class="iv-l">請求日</label><input type="date" id="iv-f-date"></div>
+          <div><label class="iv-l">支払期限</label><input type="date" id="iv-f-due"></div>
+        </div>
+        <div class="iv-row">
+          <div class="iv-full" style="flex:2"><label class="iv-l">取引先</label>
+            <div style="display:flex;gap:6px">
+              <select id="iv-f-client" style="flex:1"></select>
+              <button class="btn btn-green" style="flex:none;padding:7px 13px" onclick="ivQuickClientOpen()" title="新規取引先をその場で追加">＋</button>
+            </div>
+          </div>
+          <div style="flex:1"><label class="iv-l">敬称</label><select id="iv-f-honorific"><option>御中</option><option>様</option><option>（なし）</option></select></div>
+          <div class="iv-full" style="flex:3"><label class="iv-l">件名</label><input type="text" id="iv-f-subject" placeholder="例：2026年7月分 業務委託料"></div>
+        </div>
+      </div>
+      <div class="iv-card">
+        <h3>明細</h3>
+        <div class="tbl-ow"><table class="prev-tbl" id="iv-items-table" style="min-width:860px;table-layout:fixed">
+          <thead><tr>
+            <th style="width:26px"></th>
+            <th style="width:130px">納品日</th><th>品目（改行で詳細）</th>
+            <th style="width:112px">数量</th><th style="width:60px">単位</th>
+            <th style="width:110px">単価</th><th style="width:100px">税率</th>
+            <th style="width:110px;text-align:right">金額(税抜)</th><th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="iv-items-body"></tbody>
+        </table></div>
+        <div style="margin-top:8px"><button class="btn btn-green" onclick="ivAddItem()">＋ 行を追加</button></div>
+        <div class="iv-totals" id="iv-totals"></div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:6px">
+          <input type="checkbox" id="iv-f-withholding" style="width:auto" onchange="ivRecalc()">
+          <label for="iv-f-withholding" class="iv-l" style="margin:0;cursor:pointer">源泉徴収（10.21%）を控除する</label>
+        </div>
+      </div>
+      <div class="iv-card">
+        <h3>備考・振込先</h3>
+        <div class="iv-row"><div><label class="iv-l">備考</label><textarea id="iv-f-notes" rows="2" placeholder="お振込手数料は貴社にてご負担願います。など"></textarea></div></div>
+        <div class="iv-row"><div><label class="iv-l">振込先（空欄なら自社設定を使用）</label><textarea id="iv-f-bank" rows="2"></textarea></div></div>
+      </div>
+      <div id="iv-mspacer"></div>
+      <div id="iv-mbar">
+        <button class="btn btn-amber" onclick="ivMoreToggle(false);ivShowPreview()">👁 確認</button>
+        <button class="btn btn-amber" onclick="ivMoreToggle(false);ivDownloadPdf()">📤 送る</button>
+        <button class="btn btn-green" onclick="ivMoreToggle(false);ivSave()">💾 保存</button>
+        <button class="btn btn-blue iv-mb-more" onclick="ivMoreToggle()" title="その他の操作">⋯</button>
+      </div>
+      <div class="iv-mmore" id="iv-mmore">
+        <button class="btn btn-blue" onclick="ivMoreToggle(false);ivCopyMailText()">📋 メール文コピー</button>
+      </div>
+    </div>
+
+    <!-- 取引先 -->
+    <div id="iv-clients" class="iv-sub">
+      <div class="iv-card">
+        <h3 id="iv-c-title">取引先の登録</h3>
+        <div class="iv-row">
+          <div style="flex:2"><label class="iv-l">取引先名 *</label><input type="text" id="iv-c-name" placeholder="株式会社〇〇"></div>
+          <div style="flex:1"><label class="iv-l">担当者</label><input type="text" id="iv-c-person"></div>
+        </div>
+        <div class="iv-row">
+          <div style="flex:2"><label class="iv-l">住所</label><input type="text" id="iv-c-addr" placeholder="〒000-0000 東京都..."></div>
+          <div style="flex:1"><label class="iv-l">メール</label><input type="text" id="iv-c-email"></div>
+        </div>
+        <button class="btn btn-green" onclick="ivAddClient()">登録</button>
+        <button class="btn btn-blue" onclick="ivClearClientForm()" style="display:none" id="iv-c-cancel">キャンセル</button>
+      </div>
+      <div class="tbl-ow"><table class="prev-tbl" id="iv-clients-table"></table></div>
+      <div id="iv-clients-empty" class="empty-msg" style="display:none">取引先が登録されていません。</div>
+    </div>
+
+    <!-- 自社設定 -->
+    <div id="iv-settings" class="iv-sub">
+      <div class="iv-card">
+        <h3>自社情報（請求書の発行元）</h3>
+        <div class="iv-row">
+          <div style="flex:2"><label class="iv-l">会社名 *</label><input type="text" id="iv-s-name"></div>
+          <div style="flex:1"><label class="iv-l">代表者・担当者</label><input type="text" id="iv-s-person"></div>
+        </div>
+        <div class="iv-row"><div><label class="iv-l">住所</label><input type="text" id="iv-s-addr" placeholder="〒000-0000 ..."></div></div>
+        <div class="iv-row">
+          <div><label class="iv-l">電話番号</label><input type="text" id="iv-s-tel"></div>
+          <div><label class="iv-l">メール</label><input type="text" id="iv-s-email"></div>
+          <div><label class="iv-l">適格請求書 登録番号</label><input type="text" id="iv-s-regno" placeholder="T1234567890123"></div>
+        </div>
+        <div class="iv-row"><div><label class="iv-l">振込先（デフォルト）</label><textarea id="iv-s-bank" rows="2" placeholder="〇〇銀行 〇〇支店 普通 1234567 カ）〇〇"></textarea></div></div>
+        <div class="iv-row">
+          <div style="flex:0 0 auto;display:flex;align-items:center;gap:6px"><input type="checkbox" id="iv-s-stamp" style="width:auto"><label for="iv-s-stamp" class="iv-l" style="margin:0;cursor:pointer">印影を表示（画像未登録時は角印風を自動生成）</label></div>
+          <div style="flex:0 0 auto">
+            <label class="iv-l">印影画像（PNG推奨・透過可）</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <img id="iv-s-stampimg-prev" style="width:44px;height:44px;object-fit:contain;border:1px solid #dde2e8;border-radius:6px;display:none;background:#fff">
+              <button class="btn btn-blue" onclick="document.getElementById('iv-s-stampimg-file').click()">🖼 画像を登録</button>
+              <button class="btn-xs btn-xs-red" id="iv-s-stampimg-del" style="display:none" onclick="ivDeleteStampImg()">削除</button>
+              <input type="file" id="iv-s-stampimg-file" accept="image/*" style="display:none" onchange="ivStampImgSelected(this)">
+              <span id="iv-s-stampsize-wrap" style="display:none;align-items:center;gap:4px;font-size:11px;color:#8a93a2">
+                サイズ<input type="number" id="iv-s-stampsize" min="30" max="90" step="2" style="width:62px" title="印影の表示サイズ(px)">
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="iv-row" style="background:#f4f8ff;border:1px solid #d6e4f7;border-radius:8px;padding:10px 12px;margin-top:2px">
+          <div style="flex-basis:100%">
+            <label class="iv-l">採番規則（複数登録可。●＝既定＝新規作成時に自動適用。編集画面の⟳で任意の規則に切替可）</label>
+            <div id="iv-numrules"></div>
+            <button class="btn btn-blue" style="font-size:11px;padding:4px 12px;margin-top:2px" onclick="ivAddNumRule()">＋ 規則を追加</button>
+          </div>
+          <div style="flex:2"><label class="iv-l">PDFファイル名テンプレート（空欄なら 請求書_{number}）</label>
+            <input type="text" id="iv-s-filetpl" placeholder="請求書_{number}" oninput="ivTplPreview()"></div>
+          <div style="flex-basis:100%;font-size:10px;color:#8a93a2;line-height:1.6">
+            番号に使える変数: <code>{seq}</code> <code>{seq3}</code>(3桁) <code>{ym}</code>(202608) <code>{yymm}</code> <code>{year}</code> <code>{month}</code>　／
+            ファイル名: <code>{number}</code> <code>{clientName}</code> <code>{company}</code> <code>{month}</code>(2026年8月) <code>{ym}</code> <code>{date}</code> <code>{subject}</code><br>
+            <span id="iv-s-tpl-preview" style="color:#2c7be5;font-weight:700"></span>
+          </div>
+        </div>
+        <button class="btn btn-green" onclick="ivSaveSettings()">設定を保存</button>
+      </div>
+      <div class="iv-card">
+        <h3>✉ メール文テンプレート（「メール文コピー」で使います）</h3>
+        <div class="iv-row">
+          <div><label class="iv-l">差出人名</label><input type="text" id="iv-s-mailname" placeholder="株式会社〇〇"></div>
+          <div style="flex:2"><label class="iv-l">件名テンプレート</label><input type="text" id="iv-s-mailsubj" placeholder="【{company}】{month}分 請求書のご送付"></div>
+        </div>
+        <div class="iv-row">
+          <div><label class="iv-l">本文テンプレート（変数: {clientName} {company} {number} {subject} {month} {grand} {due}）</label>
+          <textarea id="iv-s-mailbody" rows="6" placeholder="{clientName} 御中&#10;&#10;いつもお世話になっております。{company}です。&#10;{month}分の請求書をお送りいたします。&#10;ご査収のほどよろしくお願いいたします。&#10;&#10;請求金額: {grand} 円（お支払期限: {due}）"></textarea></div>
+        </div>
+        <button class="btn btn-green" onclick="ivSaveSettings()">設定を保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 請求書 取引先クイック追加モーダル -->
+  <div class="modal-overlay" id="iv-quickclient-overlay" onclick="if(event.target===this)ivQuickClientClose()">
+    <div class="modal" onclick="event.stopPropagation()" style="width:460px">
+      <div class="modal-title">＋ 新規取引先を追加</div>
+      <div class="modal-field"><div class="modal-label">取引先名 *</div><input class="modal-inp" id="iv-qc-name" placeholder="株式会社〇〇"></div>
+      <div class="modal-field"><div class="modal-label">担当者</div><input class="modal-inp" id="iv-qc-person"></div>
+      <div class="modal-field"><div class="modal-label">住所</div><input class="modal-inp" id="iv-qc-addr" placeholder="〒000-0000 東京都..."></div>
+      <div class="modal-field"><div class="modal-label">メール（請求書送付先）</div><input class="modal-inp" id="iv-qc-email"></div>
+      <div class="modal-btns">
+        <button class="btn btn-red" onclick="ivQuickClientClose()">キャンセル</button>
+        <button class="btn-primary" onclick="ivQuickClientSave()">追加して選択</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 請求書 メール文コピーモーダル（手動送信用：スマホGmailアプリ等に貼り付け） -->
+  <div class="modal-overlay" id="iv-copy-overlay" onclick="if(event.target===this)ivCloseCopy()">
+    <div class="modal" onclick="event.stopPropagation()" style="width:520px">
+      <div class="modal-title">📋 メール文（コピーして送信アプリへ）</div>
+      <div class="modal-field">
+        <div class="modal-label">宛先（To）</div>
+        <div style="display:flex;gap:6px">
+          <input class="modal-inp" id="iv-cp-to">
+          <button class="btn btn-blue" style="flex:none" onclick="ivCopyField('iv-cp-to',this)">コピー</button>
+        </div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">件名</div>
+        <div style="display:flex;gap:6px">
+          <input class="modal-inp" id="iv-cp-subject">
+          <button class="btn btn-blue" style="flex:none" onclick="ivCopyField('iv-cp-subject',this)">コピー</button>
+        </div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">本文</div>
+        <textarea class="modal-inp" id="iv-cp-body" rows="9"></textarea>
+        <button class="btn btn-blue" style="margin-top:6px" onclick="ivCopyField('iv-cp-body',this)">本文をコピー</button>
+      </div>
+      <div style="font-size:11px;color:#555;margin-top:4px">PDFは「📤 PDFを作って送る」から添付できます。</div>
+      <div class="modal-btns" style="flex-wrap:wrap">
+        <button class="btn btn-red" onclick="ivCloseCopy()">閉じる</button>
+        <button class="btn btn-blue" onclick="document.getElementById('iv-f-status').value='sent';ivSave();ivCloseCopy();">送付済みにして保存</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- スマホ版：PDFができたら -->
+  <div class="modal-overlay" id="ivm-overlay" onclick="if(event.target===this)ivmClose()">
+    <div class="modal" onclick="event.stopPropagation()" style="width:440px">
+      <div class="ivm-head"><div class="modal-title">📄 PDFができました</div><button class="ivm-x" onclick="ivmClose()" title="閉じる">✕</button></div>
+      <div id="ivm-name" style="font-size:12px;color:#555;margin-bottom:10px;word-break:break-all"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-green" id="ivm-share" style="padding:14px;font-size:15px" onclick="ivmShare()">📤 メールで送る（Gmail・キャリアメール等）</button>
+        <div id="ivm-note" style="font-size:11.5px;color:#667383;line-height:1.5"></div>
+        <button class="btn btn-blue" style="padding:12px;font-size:14px" onclick="ivmSavePdf()">⬇ PDFを保存</button>
+        <button class="btn btn-blue" style="padding:12px;font-size:14px" onclick="ivmCopyTexts()">📋 宛先・件名・本文をコピー</button>
+        <button class="btn btn-blue" style="padding:12px;font-size:14px" onclick="ivmMailApp()">✉ メールアプリを開く（PDFは保存したものを添付）</button>
+        <button class="btn btn-amber" style="padding:12px;font-size:14px" onclick="ivmMarkSent()">✓ 送付済みにする</button>
+        <div id="ivm-sent-msg" style="font-size:12px;color:#1a7f37;font-weight:700"></div>
+      </div>
+      <img id="ivm-prev" alt="" style="width:100%;margin-top:12px;border:1px solid #dde2e8;border-radius:6px">
+      <div class="modal-btns"><button class="btn btn-blue" onclick="ivmClose()">閉じる</button></div>
+    </div>
+  </div>
+
+  <!-- 請求書 A4プレビュー -->
+  <div id="invPreviewOverlay" onclick="if(event.target===this)ivHidePreview()">
+    <div class="pv-actions">
+      <button class="btn btn-green" onclick="ivDownloadPdf()">📤 PDFで送る</button>
+      <button class="btn btn-amber" onclick="window.print()">🖨 印刷</button>
+      <button class="btn btn-blue" onclick="ivHidePreview()">閉じる</button>
+    </div>
+    <div class="iv-a4" id="iv-preview-page"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  共通ユーティリティ（配布版：ブラウザのみで完結）
+// ============================================================
+const _memLS = {};
+let _lsOK = (function(){ try{ const t='__probe'; localStorage.setItem(t,'1'); localStorage.removeItem(t); return true; }catch(e){ return false; } })();
+function loadLS(k, d){
+  if(!_lsOK){ try{ return (k in _memLS) ? JSON.parse(_memLS[k]) : d; }catch(e){ return d; } }
+  try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; }
+}
+let _lsFailAt = 0;
+function saveLS(k, v){
+  if(!_lsOK){ try{ _memLS[k] = JSON.stringify(v); }catch(e){} return; }
+  try{ localStorage.setItem(k, JSON.stringify(v)); }
+  catch(e){
+    try{ _memLS[k] = JSON.stringify(v); }catch(_){}
+    if(Date.now() - _lsFailAt > 30000){
+      _lsFailAt = Date.now();
+      notify('⚠ 保存に失敗しました（容量不足の可能性）。バックアップを取ってください', 'error');
+    }
+  }
+}
+
+let notifTimer = null;
+function notify(msg, type='success', sticky=false){
+  const el = document.getElementById('notif');
+  clearTimeout(notifTimer);
+  el.className = 'notif ' + type; el.style.display = 'block';
+  if(type === 'error' || sticky){
+    el.innerHTML = '<div style="display:flex;align-items:flex-start;gap:10px">'
+      + '<div style="user-select:text;word-break:break-all;max-width:420px;line-height:1.5">' + esc(String(msg)) + '</div>'
+      + '<button onclick="this.parentNode.parentNode.style.display=&#39;none&#39;" style="background:none;border:1px solid #00000033;color:inherit;border-radius:5px;cursor:pointer;font-size:11px;padding:2px 8px;flex:none">✕</button></div>';
+  } else {
+    el.textContent = msg;
+    notifTimer = setTimeout(()=>el.style.display='none', 2600);
+  }
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\x22/g,'&quot;'); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ============================================================
+//  配布版で差し替えた機能
+// ============================================================
+// 送信予約は単体版に無いので、一覧の⏰印・編集画面の予約バナーは常に出さない
+function ivSchedChip(){ return ''; }
+function ivUpdateSchedBanner(){}
+// 印刷→PDF保存のファイル名はブラウザがページのタイトルから決めるので、
+// 印刷の間だけタイトルを「PDFファイル名テンプレート」の名前にする（Ctrl+P・🖨ボタンも対象）
+var _ivTitleBak=null;
+window.addEventListener('beforeprint', function(){
+  try{
+    var ov=document.getElementById('invPreviewOverlay');
+    if(!ov||!ov.classList.contains('show')) return;
+    _ivTitleBak=document.title;
+    document.title=ivFileName(ivReadForm()).replace(/\.pdf$/i,'');
+  }catch(e){}
+});
+window.addEventListener('afterprint', function(){
+  if(_ivTitleBak!==null){ document.title=_ivTitleBak; _ivTitleBak=null; }
+});
+
+// バックアップの復元（請求書・取引先・自社設定をまとめて取り込む）
+function ivImportJson(input){
+  const file = input.files && input.files[0];
+  input.value = '';
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    let d;
+    try{ d = JSON.parse(r.result); }
+    catch(e){ notify('JSONを読み取れませんでした: ' + (e.message||e), 'error'); return; }
+    if(!d || (!Array.isArray(d.invoices) && !Array.isArray(d.clients) && !d.settings)){
+      notify('このファイルには請求書データが入っていません', 'error'); return;
+    }
+    const curInv = ivInvoices(), curCli = ivClients();
+    const addInv = (d.invoices||[]).filter(x => x && x.id);
+    const addCli = (d.clients||[]).filter(x => x && x.id);
+    const msg = '復元します。\n\n請求書 ' + addInv.length + '件 / 取引先 ' + addCli.length + '件'
+      + (d.settings && Object.keys(d.settings).length ? '\n自社設定も上書きします' : '')
+      + '\n\n※ 同じIDのデータは取り込んだ内容で置き換えます。\n現在: 請求書 ' + curInv.length + '件 / 取引先 ' + curCli.length + '件';
+    if(!confirm(msg)) return;
+    const mergeById = (cur, add) => {
+      const map = {};
+      cur.forEach(x => map[x.id] = x);
+      add.forEach(x => map[x.id] = x);
+      return Object.values(map);
+    };
+    if(addCli.length) ivSaveClients(mergeById(curCli, addCli));
+    if(addInv.length) ivSaveInvoices(mergeById(curInv, addInv));
+    if(d.settings && Object.keys(d.settings).length) ivSaveSettingsObj(d.settings);
+    ivRenderList(); ivRenderClients(); ivRenderClientOptions(); ivLoadSettingsForm();
+    notify('復元しました（請求書' + addInv.length + '件・取引先' + addCli.length + '件）');
+  };
+  r.onerror = () => notify('ファイルを読めませんでした', 'error');
+  r.readAsText(file, 'utf-8');
+}
+
+// ============================================================
+//  起動
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  try{
+    ivRenderClients();
+    ivRenderClientOptions();
+    ivLoadSettingsForm();
+    ivRenderList();
+    ivSwitch('list');
+    if(!_lsOK){
+      notify('⚠ このブラウザではデータを保存できません（プライベートモード等）。バックアップ機能をお使いください', 'error', true);
+    } else if(!(ivSettings().name||'').trim()){
+      // 初回起動：自社設定へ誘導
+      notify('はじめに「⚙ 自社設定」で会社名・住所・振込先を登録してください', 'info', true);
+      ivSwitch('settings');
+    }
+    window.__bootOK = true;
+  }catch(e){
+    const el = document.getElementById('notif');
+    if(el){ el.className='notif error'; el.style.display='block'; el.textContent='起動エラー: ' + (e.message||e); }
+  }
+});
+
+
+// ============================================================
+//  INVOICE（本体：mf-shiwake から抽出）
+// ============================================================
+//  INVOICE（請求書作成：一覧/作成/取引先/自社設定/A4プレビュー → 売上仕訳連携）
+// ============================================================
+const invYen=n=>'¥'+Math.round(n||0).toLocaleString('ja-JP');
+const invNum=n=>Math.round(n||0).toLocaleString('ja-JP');
+// 入力欄の数値を読む：全角数字・カンマ・¥・空白を許容（"１，０００" → 1000）。読めなければ0
+function ivParseNum(v){
+  const s=String(v==null?'':v)
+    .replace(/[\uFF10-\uFF19]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0))
+    .replace(/[\uFF0E]/g,'.').replace(/[\uFF0D\u2212]/g,'-')
+    .replace(/[,\uFF0C\u00A5\uFFE5\s]/g,'');
+  const n=parseFloat(s);
+  return isFinite(n)?n:0;
+}
+// 単価の表示（3桁カンマ・小数はそのまま）
+const ivFmtPrice=n=>{ const v=ivParseNum(n); return Number.isInteger(v)?v.toLocaleString('ja-JP'):String(v); };
+function invToday(){ return _ivYmd(new Date()); }   // ローカル日付（toISOStringはUTCなので朝9時前だと前日になる）
+function invSlash(s){ return s?String(s).replace(/-/g,'/'):''; }
+let _ivCurrentId=null, _ivEditingClient=null;
+
+function ivInvoices(){ return loadLS('iv_invoices', []); }
+function ivClients(){ return loadLS('iv_clients', []); }
+function ivSettings(){ return loadLS('iv_settings', {}); }
+function ivSaveInvoices(v){ saveLS('iv_invoices', v); }
+function ivSaveClients(v){ saveLS('iv_clients', v); }
+function ivSaveSettingsObj(v){ saveLS('iv_settings', v); }
+
+function ivRender(){ ivSwitch(document.querySelector('#tab-invoice .iv-sub.active')?.id.replace('iv-','')||'list'); }
+function ivSwitch(name){
+  document.querySelectorAll('#tab-invoice .iv-sub').forEach(v=>v.classList.remove('active'));
+  const el=document.getElementById('iv-'+name); if(el)el.classList.add('active');
+  document.querySelectorAll('#tab-invoice .iv-nav button').forEach(b=>b.classList.toggle('active', b.dataset.iv===name));
+  if(name==='list'){ ivRenderList(); }
+  if(name==='clients') ivRenderClients();
+  if(name==='settings') ivLoadSettingsForm();
+}
+
+// ---- 一覧 ----
+const IV_STATUS={draft:'下書き',sent:'送付済み',paid:'入金済み'};
+function ivRenderList(){
+  const q=(document.getElementById('iv-search').value||'').toLowerCase();
+  const st=document.getElementById('iv-status-filter').value;
+  const list=ivInvoices()
+    .filter(inv=>!st||inv.status===st)
+    .filter(inv=>!q||[inv.number,inv.clientName,inv.subject].join(' ').toLowerCase().includes(q))
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const tbl=document.getElementById('iv-list-table');
+  const empty=document.getElementById('iv-list-empty');
+  document.getElementById('iv-list-info').textContent=`${list.length}件 ／ 税込合計 ¥${invNum(list.reduce((s,i)=>s+ivCalc(i).grand,0))}`;
+  if(!list.length){ tbl.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  let html='<thead><tr><th>番号</th><th>取引先</th><th>件名</th><th>請求日</th><th>支払期限</th><th style="text-align:right">税込金額</th><th>状態</th><th></th></tr></thead><tbody>';
+  list.forEach(inv=>{const t=ivCalc(inv);
+    html+=`<tr>
+      <td style="cursor:pointer" onclick="ivEdit('${inv.id}')">${esc(inv.number)}</td>
+      <td style="cursor:pointer" onclick="ivEdit('${inv.id}')">${esc(inv.clientName)}</td>
+      <td style="font-size:11px;cursor:pointer" onclick="ivEdit('${inv.id}')">${esc(inv.subject)}</td>
+      <td>${invSlash(inv.date)}</td><td>${invSlash(inv.due)}</td>
+      <td style="text-align:right" class="td-g">${invYen(t.grand)}</td>
+      <td><span class="iv-status iv-st-${inv.status}">${IV_STATUS[inv.status]||''}</span>${ivSchedChip(inv.number)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-xs btn-xs-blue" onclick="ivEdit('${inv.id}')">✎</button>
+        <button class="btn-xs btn-xs-blue" onclick="ivDuplicate('${inv.id}')">複製</button>
+        <button class="btn-xs btn-xs-red" onclick="ivDelete('${inv.id}')">削除</button>
+      </td></tr>`;});
+  tbl.innerHTML=html+'</tbody>';
+}
+
+// ---- CRUD ----
+// 採番テンプレート展開: {seq}{seq2}{seq3}=連番 {ym}=202608 {yymm}=2608 {year} {month}
+function ivFillNumTpl(tpl, seq, now){
+  const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0');
+  return String(tpl)
+    .replace(/\{seq3\}/g, String(seq).padStart(3,'0'))
+    .replace(/\{seq2\}/g, String(seq).padStart(2,'0'))
+    .replace(/\{seq\}/g,  String(seq))
+    .replace(/\{ym\}/g,   `${y}${m}`)
+    .replace(/\{yymm\}/g, `${String(y).slice(2)}${m}`)
+    .replace(/\{year\}/g, String(y))
+    .replace(/\{month\}/g,String(now.getMonth()+1));
+}
+// 採番規則の一覧を返す（旧形式 numTpl/prefix/seq からの自動移行つき）
+function ivNumRules(s){
+  s=s||ivSettings();
+  if(Array.isArray(s.numRules)&&s.numRules.length) return s.numRules;
+  const tpl=(s.numTpl&&String(s.numTpl).trim())||`${s.prefix||'INV-'}{ym}-{seq3}`;
+  return [{name:'標準', tpl, seq:Number(s.seq)||0}];
+}
+// 指定した規則で採番（その規則の連番だけが進む）
+function ivNextNumberFromRule(idx){
+  const s=ivSettings();
+  const rules=ivNumRules(s);
+  const i=Math.min(Math.max(0,Number(idx)||0),rules.length-1);
+  rules[i].seq=(Number(rules[i].seq)||0)+1;
+  s.numRules=rules; delete s.numTpl;
+  ivSaveSettingsObj(s);
+  return ivFillNumTpl(rules[i].tpl||'INV-{ym}-{seq3}', rules[i].seq, new Date());
+}
+// 既定規則で採番（新規作成・複製時）
+function ivNextNumber(){
+  const s=ivSettings();
+  return ivNextNumberFromRule(Number(s.numRuleDef)||0);
+}
+// 編集画面: 選択中の規則で採番し直す
+function ivRenumber(){
+  const n=ivNextNumberFromRule(Number(document.getElementById('iv-f-numrule').value)||0);
+  document.getElementById('iv-f-number').value=n;
+  notify(`採番しました: ${n}`);
+}
+// PDFファイル名テンプレート展開（既定: 請求書_{number}）。禁止文字は_に置換。
+function ivFileName(inv){
+  const s=ivSettings();
+  const tpl=(s.fileTpl&&s.fileTpl.trim())||'請求書_{number}';
+  const p=(inv.date||'').slice(0,7).split('-');
+  const name=tpl
+    .replace(/\{number\}/g, inv.number||'')
+    .replace(/\{clientName\}/g, inv.clientName||'')
+    .replace(/\{company\}/g, s.name||(ivSettings().name||'')||'')
+    .replace(/\{subject\}/g, inv.subject||'')
+    .replace(/\{date\}/g, inv.date||'')
+    .replace(/\{ym\}/g, p.length===2?`${p[0]}${p[1]}`:'')
+    .replace(/\{month\}/g, p.length===2?`${p[0]}年${Number(p[1])}月`:'');
+  let base=name.replace(/[\\\/:*?\x22<>|]/g,'_').trim();
+  // 空の差し込み値でできた「__」や先頭・末尾の「_」を詰める（例: {company}_{clientName} で社名未設定 → _取引先）
+  base=base.replace(/_{2,}/g,'_').replace(/^[\s_]+/,'').replace(/[\s_]+$/,'');
+  // 差し込む値（会社名・取引先など）が未設定だと「___」のような名前になるので、中身が無ければ既定名に戻す
+  if(!base.replace(/[\s_\-.　]/g,'')) base='請求書'+(inv.number?'_'+String(inv.number).replace(/[\\\/:*?\x22<>|]/g,'_'):'');
+  return base+'.pdf';
+}
+function ivBlankItem(){ return {date:'',name:'',note:'',qty:1,unit:'式',price:0,tax:10}; }
+
+// ---- 品目の学習（保存済み請求書から品目名・単価・単位・税率を収集して候補化） ----
+function ivLearnedItems(){
+  const map={};
+  ivInvoices().forEach(inv=>{
+    (inv.items||[]).forEach(it=>{
+      const name=String(it.name||'').trim();
+      if(!name) return;
+      const key=name.split('\n')[0].trim(); // 1行目（品目名）で集約。詳細行違いは同一品目とみなす
+      if(!key) return;
+      const e=map[key]||(map[key]={name, note:it.note||'', price:it.price, unit:it.unit||'式', tax:it.tax, count:0, last:inv.date||''});
+      e.count++;
+      // 最新の請求書の内容を優先（単価改定に追従）
+      if((inv.date||'')>=e.last){ e.name=name; e.note=it.note||''; e.price=it.price; e.unit=it.unit||'式'; e.tax=it.tax; e.last=inv.date||''; }
+    });
+  });
+  return Object.values(map).sort((a,b)=>b.count-a.count||String(a.name).localeCompare(String(b.name)));
+}
+function ivRenderItemDatalist(){
+  let dl=document.getElementById('iv-item-datalist');
+  if(!dl){ dl=document.createElement('datalist'); dl.id='iv-item-datalist'; document.body.appendChild(dl); }
+  dl.innerHTML=ivLearnedItems().map(e=>{
+    const label=String(e.name).split('\n')[0];
+    return `<option value="${esc(label)}">${esc(`¥${invNum(e.price)} / ${e.unit} ・ ${e.count}回`)}</option>`;
+  }).join('');
+}
+// 品目名の入力/選択時に、学習済みなら単価・単位・税率を自動補完（未入力の欄のみ）
+function ivAutofillItem(tr){
+  const nameEl=tr.querySelector('.iv-i-name');
+  const first=String(nameEl.value||'').split('\n')[0].trim();
+  if(!first) return;
+  const hit=ivLearnedItems().find(e=>String(e.name).split('\n')[0].trim()===first);
+  if(!hit) return;
+  const priceEl=tr.querySelector('.iv-i-price'), unitEl=tr.querySelector('.iv-i-unit'), taxEl=tr.querySelector('.iv-i-tax');
+  if(!ivParseNum(priceEl.value)) priceEl.value=ivFmtPrice(hit.price);
+  if(!unitEl.value||unitEl.value==='式') unitEl.value=hit.unit;
+  if(taxEl && hit.tax!=null && !tr.dataset.taxTouched) taxEl.value=String(hit.tax);
+  // 複数行の詳細を持つ品目なら、name全体を復元（1行目のみ入力された場合）
+  if(String(hit.name).includes('\n') && nameEl.value.trim()===first) nameEl.value=hit.name;
+  // 詳細メモも未入力なら学習値で補完
+  const noteEl=tr.querySelector('.iv-i-note');
+  if(noteEl && !noteEl.value.trim() && hit.note) noteEl.value=hit.note;
+  ivRecalc();
+}
+// 既定の日付: 請求日=今月末 / 支払期限=翌月末（ローカル日付・タイムゾーンずれ回避）
+function _ivYmd(d){ const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+function ivDefaultDates(base){
+  const b=base?new Date(base):new Date();
+  return { date:_ivYmd(new Date(b.getFullYear(), b.getMonth()+1, 0)),   // 今月末
+           due: _ivYmd(new Date(b.getFullYear(), b.getMonth()+2, 0)) }; // 翌月末
+}
+function ivNew(){
+  _ivCurrentId=null;
+  const dd=ivDefaultDates();
+  ivFillForm({number:ivNextNumber(),status:'draft',date:dd.date,due:dd.due,
+    clientId:'',honorific:'御中',subject:'',items:[ivBlankItem()],withholding:false,notes:'',bank:''});
+  ivSwitch('edit');
+}
+function ivEdit(id){ const inv=ivInvoices().find(i=>i.id===id); if(!inv)return; _ivCurrentId=id; ivFillForm(inv); ivSwitch('edit'); }
+function ivDuplicate(id){ const inv=ivInvoices().find(i=>i.id===id); if(!inv)return;
+  const c=JSON.parse(JSON.stringify(inv)); c.id=uid(); c.number=ivNextNumber(); c.status='draft';
+  const dd=ivDefaultDates(); c.date=dd.date; c.due=dd.due;   // 日付は複製せず既定（今月末／翌月末）に
+  const list=ivInvoices(); list.push(c); ivSaveInvoices(list); ivRenderList(); notify('複製しました（請求日=今月末・支払期限=翌月末に設定）'); }
+function ivDelete(id){ const inv=ivInvoices().find(i=>i.id===id); if(!inv)return;
+  if(!confirm(`請求書「${inv.number}」を削除しますか？`))return;
+  ivSaveInvoices(ivInvoices().filter(i=>i.id!==id)); ivRenderList(); notify('削除しました'); }
+
+function ivFillForm(inv){
+  document.getElementById('iv-f-number').value=inv.number||'';
+  // 採番規則セレクタ（既定を選択状態に）
+  const nrSel=document.getElementById('iv-f-numrule');
+  if(nrSel){
+    const s=ivSettings(); const rules=ivNumRules(s); const def=Number(s.numRuleDef)||0;
+    nrSel.innerHTML=rules.map((r,i)=>`<option value="${i}"${i===def?' selected':''}>${esc(r.name||('規則'+(i+1)))}</option>`).join('');
+  }
+  document.getElementById('iv-f-status').value=inv.status||'draft';
+  document.getElementById('iv-f-date').value=inv.date||invToday();
+  document.getElementById('iv-f-due').value=inv.due||'';
+  ivRenderClientOptions(inv.clientId);
+  document.getElementById('iv-f-honorific').value=inv.honorific||'御中';
+  document.getElementById('iv-f-subject').value=inv.subject||'';
+  document.getElementById('iv-f-withholding').checked=!!inv.withholding;
+  document.getElementById('iv-f-notes').value=inv.notes||'';
+  document.getElementById('iv-f-bank').value=inv.bank||'';
+  document.getElementById('iv-edit-info').textContent=_ivCurrentId?`編集中: ${inv.number}`:`新規: ${inv.number}`;
+  ivRenderItems(inv.items&&inv.items.length?inv.items:[ivBlankItem()]);
+  ivUpdateSchedBanner(inv.number);
+}
+function ivReadForm(){
+  const sel=document.getElementById('iv-f-client');
+  const client=ivClients().find(c=>c.id===sel.value);
+  return {id:_ivCurrentId||uid(),
+    number:document.getElementById('iv-f-number').value.trim(),
+    status:document.getElementById('iv-f-status').value,
+    date:document.getElementById('iv-f-date').value, due:document.getElementById('iv-f-due').value,
+    clientId:sel.value, clientName:client?client.name:(sel.selectedOptions[0]?.textContent||''),
+    honorific:document.getElementById('iv-f-honorific').value,
+    subject:document.getElementById('iv-f-subject').value.trim(),
+    items:ivReadItems(), withholding:document.getElementById('iv-f-withholding').checked,
+    notes:document.getElementById('iv-f-notes').value, bank:document.getElementById('iv-f-bank').value};
+}
+function ivSave(){
+  const inv=ivReadForm();
+  if(!inv.clientId&&!inv.clientName){ notify('取引先を選択してください（未登録なら取引先タブで登録）','error'); return; }
+  if(!inv.number){ notify('請求書番号を入力してください','error'); return; }
+  const list=ivInvoices(); const idx=list.findIndex(i=>i.id===inv.id);
+  if(idx>=0) list[idx]=inv; else list.push(inv);
+  _ivCurrentId=inv.id; ivSaveInvoices(list); ivRenderItemDatalist();
+  _ivJustSavedNumber=inv.number;
+  notify('請求書を保存しました'); ivSwitch('list');
+}
+
+// ---- 明細 ----
+function ivRenderItems(items){ ivRenderItemDatalist(); const tb=document.getElementById('iv-items-body'); tb.innerHTML=''; items.forEach(it=>tb.appendChild(ivMakeItemRow(it))); ivRecalc(); }
+function ivMakeItemRow(it){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="iv-drag ivc-drag" title="ドラッグで並べ替え">⠿</td>
+    <td class="ivc-date" data-l="納品日"><input type="date" class="iv-i-date" value="${esc(String(it.date||''))}"></td>
+    <td class="ivc-name"><textarea class="iv-i-name" rows="1" placeholder="品目名">${esc(String(it.name||''))}</textarea>
+      <textarea class="iv-i-note" rows="1" placeholder="詳細メモ（任意・小さい字で印字）">${esc(String(it.note||''))}</textarea>
+      <input class="iv-i-pick" list="iv-item-datalist" placeholder="🔍 登録済みの品目から選ぶ" style="margin-top:3px;font-size:11px;padding:4px 7px"></td>
+    <td class="ivc-qty" data-l="数量"><div class="iv-qty-wrap">
+      <button type="button" class="iv-qty-btn" data-d="-1" tabindex="-1" title="1減らす">−</button>
+      <input type="text" inputmode="decimal" class="iv-i-qty" value="${esc(String(it.qty??1))}" autocomplete="off">
+      <button type="button" class="iv-qty-btn" data-d="1" tabindex="-1" title="1増やす">＋</button></div></td>
+    <td class="ivc-unit" data-l="単位"><input type="text" class="iv-i-unit" value="${esc(String(it.unit||''))}"></td>
+    <td class="ivc-price" data-l="単価"><input type="text" inputmode="decimal" class="iv-i-price" value="${esc(ivFmtPrice(it.price??0))}" autocomplete="off" style="text-align:right"></td>
+    <td class="ivc-tax" data-l="税率"><select class="iv-i-tax">
+      <option value="10"${it.tax==10?' selected':''}>10%</option>
+      <option value="8"${it.tax==8?' selected':''}>8%(軽減)</option>
+      <option value="0"${it.tax==0?' selected':''}>非課税</option></select></td>
+    <td style="text-align:right" class="iv-i-amount ivc-amt" data-l="金額（税抜）">¥0</td>
+    <td class="ivc-del"><button class="btn-xs btn-xs-red" title="行削除">✕</button></td>`;
+  tr.querySelectorAll('input,select,textarea').forEach(el=>el.addEventListener('input',ivRecalc));
+  const qtyEl=tr.querySelector('.iv-i-qty');
+  tr.querySelectorAll('.iv-qty-btn').forEach(b=>{
+    b.addEventListener('mousedown',e=>e.preventDefault());   // 入力欄のフォーカスを奪わない
+    b.addEventListener('click',()=>{
+      const v=Math.round((ivParseNum(qtyEl.value)+Number(b.dataset.d))*10000)/10000;
+      qtyEl.value=String(Math.max(0,v));
+      ivRecalc();
+    });
+  });
+  // 確定時に見やすく整える（数量は数字だけ、単価は3桁カンマ）
+  qtyEl.addEventListener('blur',()=>{ if(qtyEl.value.trim()!=='') qtyEl.value=String(ivParseNum(qtyEl.value)); ivRecalc(); });
+  const priceEl=tr.querySelector('.iv-i-price');
+  priceEl.addEventListener('blur',()=>{ if(priceEl.value.trim()!=='') priceEl.value=ivFmtPrice(priceEl.value); ivRecalc(); });
+  tr.querySelector('.btn-xs-red').addEventListener('click',()=>{ tr.remove(); if(!document.querySelectorAll('#iv-items-body tr').length) ivAddItem(); ivRecalc(); });
+  // 税率を手で変えたら自動補完で上書きしない
+  tr.querySelector('.iv-i-tax').addEventListener('change',()=>{ tr.dataset.taxTouched='1'; });
+  // 登録済み品目を選んだら本欄に反映＋単価/単位/税率を補完
+  const pick=tr.querySelector('.iv-i-pick');
+  const applyPick=()=>{
+    const v=pick.value.trim(); if(!v) return;
+    tr.querySelector('.iv-i-name').value=v;
+    pick.value='';
+    ivAutofillItem(tr);
+  };
+  pick.addEventListener('change',applyPick);
+  pick.addEventListener('input',()=>{ // datalistからの選択は input で確定することがある
+    const list=ivLearnedItems().map(e=>String(e.name).split('\n')[0].trim());
+    if(list.includes(pick.value.trim())) applyPick();
+  });
+  // ドラッグで並べ替え（マウス・タッチ両対応。保存/PDF/合計はDOM順を読むので順番がそのまま反映される）
+  const handle=tr.querySelector('.iv-drag');
+  handle.addEventListener('mousedown',e=>{ e.preventDefault(); ivBeginItemDrag(tr,'mouse'); });
+  handle.addEventListener('touchstart',e=>{ e.preventDefault(); ivBeginItemDrag(tr,'touch'); },{passive:false});
+  return tr;
+}
+function ivBeginItemDrag(tr,mode){
+  const tb=tr.parentNode;
+  tr.classList.add('iv-dragging');
+  const yOf=ev=>mode==='touch'?(ev.touches[0]||ev.changedTouches[0]).clientY:ev.clientY;
+  const move=ev=>{
+    if(mode==='touch') ev.preventDefault();  // ドラッグ中の画面スクロールを止める
+    const y=yOf(ev);
+    let target=null, after=false;
+    for(const r of tb.children){ if(r===tr) continue;
+      const b=r.getBoundingClientRect();
+      if(y<b.top+b.height/2){ target=r; after=false; break; }
+      target=r; after=true;
+    }
+    if(target && target!==tr){ after?target.after(tr):target.before(tr); }
+  };
+  const evMove=mode==='touch'?'touchmove':'mousemove';
+  const evUp=mode==='touch'?'touchend':'mouseup';
+  const up=()=>{
+    tr.classList.remove('iv-dragging');
+    document.removeEventListener(evMove,move);
+    document.removeEventListener(evUp,up);
+    ivRecalc();
+  };
+  document.addEventListener(evMove,move,{passive:false});
+  document.addEventListener(evUp,up);
+}
+function ivAddItem(){ document.getElementById('iv-items-body').appendChild(ivMakeItemRow(ivBlankItem())); ivRecalc(); }
+function ivReadItems(){
+  return [...document.querySelectorAll('#iv-items-body tr')].map(tr=>({
+    date:tr.querySelector('.iv-i-date').value, name:tr.querySelector('.iv-i-name').value,
+    note:tr.querySelector('.iv-i-note').value,
+    qty:ivParseNum(tr.querySelector('.iv-i-qty').value), unit:tr.querySelector('.iv-i-unit').value,
+    price:ivParseNum(tr.querySelector('.iv-i-price').value), tax:parseInt(tr.querySelector('.iv-i-tax').value,10)
+  })).filter(it=>it.name||it.price);
+}
+function ivCalc(inv){
+  const byRate={};
+  (inv.items||[]).forEach(it=>{ const amt=(it.qty||0)*(it.price||0); byRate[it.tax]=(byRate[it.tax]||0)+amt; });
+  let subtotal=0,tax=0; const detail=[];
+  Object.keys(byRate).sort((a,b)=>b-a).forEach(rate=>{ const base=byRate[rate]; const t=Math.floor(base*rate/100);
+    subtotal+=base; tax+=t; detail.push({rate:+rate,base,tax:t}); });
+  let wh=0;
+  if(inv.withholding) wh=subtotal<=1000000?Math.floor(subtotal*0.1021):Math.floor((subtotal-1000000)*0.2042+102100);
+  return {subtotal,tax,detail,withholding:wh,grand:subtotal+tax-wh};
+}
+function ivRecalc(){
+  document.querySelectorAll('#iv-items-body tr').forEach(tr=>{
+    const qty=ivParseNum(tr.querySelector('.iv-i-qty').value), price=ivParseNum(tr.querySelector('.iv-i-price').value);
+    tr.querySelector('.iv-i-amount').textContent=invYen(qty*price);
+  });
+  const t=ivCalc({items:ivReadItems(),withholding:document.getElementById('iv-f-withholding').checked});
+  let html=`<div class="iv-trow"><span>小計（税抜）</span><span>${invYen(t.subtotal)}</span></div>`;
+  t.detail.forEach(d=>{ if(d.rate>0) html+=`<div class="iv-trow sub"><span>消費税 ${d.rate}%（対象 ${invYen(d.base)}）</span><span>${invYen(d.tax)}</span></div>`; });
+  html+=`<div class="iv-trow"><span>消費税合計</span><span>${invYen(t.tax)}</span></div>`;
+  if(t.withholding) html+=`<div class="iv-trow"><span>源泉徴収税額</span><span>−${invYen(t.withholding)}</span></div>`;
+  html+=`<div class="iv-trow grand"><span>ご請求金額（税込）</span><span>${invYen(t.grand)}</span></div>`;
+  document.getElementById('iv-totals').innerHTML=html;
+}
+
+// ---- 取引先 ----
+function ivRenderClientOptions(selId){
+  const sel=document.getElementById('iv-f-client');
+  sel.innerHTML='<option value="">-- 選択 --</option>'+ivClients().map(c=>`<option value="${c.id}"${c.id===selId?' selected':''}>${esc(c.name)}</option>`).join('');
+}
+// 編集画面からその場で取引先を追加（追加後に自動選択）
+function ivQuickClientOpen(){
+  ['iv-qc-name','iv-qc-person','iv-qc-addr','iv-qc-email'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('iv-quickclient-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('iv-qc-name').focus(),60);
+}
+function ivQuickClientClose(){ document.getElementById('iv-quickclient-overlay').classList.remove('open'); }
+function ivQuickClientSave(){
+  const name=document.getElementById('iv-qc-name').value.trim();
+  if(!name){ notify('取引先名を入力してください','error'); return; }
+  const list=ivClients();
+  const c={id:uid(), name,
+    person:document.getElementById('iv-qc-person').value.trim(),
+    addr:document.getElementById('iv-qc-addr').value.trim(),
+    email:document.getElementById('iv-qc-email').value.trim()};
+  list.push(c); ivSaveClients(list);
+  ivRenderClientOptions(c.id);  // 追加した取引先を選択状態に
+  ivQuickClientClose();
+  notify(`取引先「${name}」を追加して選択しました`);
+}
+function ivAddClient(){
+  const name=document.getElementById('iv-c-name').value.trim();
+  if(!name){ notify('取引先名を入力してください','error'); return; }
+  const data={name,person:document.getElementById('iv-c-person').value.trim(),addr:document.getElementById('iv-c-addr').value.trim(),email:document.getElementById('iv-c-email').value.trim()};
+  const list=ivClients();
+  if(_ivEditingClient){ const c=list.find(c=>c.id===_ivEditingClient); if(c)Object.assign(c,data); }
+  else list.push(Object.assign({id:uid()},data));
+  ivSaveClients(list); ivClearClientForm(); ivRenderClients(); notify('取引先を保存しました');
+}
+function ivClearClientForm(){ _ivEditingClient=null; ['iv-c-name','iv-c-person','iv-c-addr','iv-c-email'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('iv-c-title').textContent='取引先の登録'; document.getElementById('iv-c-cancel').style.display='none'; }
+function ivEditClient(id){ const c=ivClients().find(c=>c.id===id); if(!c)return; _ivEditingClient=id;
+  document.getElementById('iv-c-name').value=c.name; document.getElementById('iv-c-person').value=c.person||'';
+  document.getElementById('iv-c-addr').value=c.addr||''; document.getElementById('iv-c-email').value=c.email||'';
+  document.getElementById('iv-c-title').textContent=`「${c.name}」を編集中`; document.getElementById('iv-c-cancel').style.display=''; }
+function ivDeleteClient(id){ const c=ivClients().find(c=>c.id===id); if(!c)return; if(!confirm(`取引先「${c.name}」を削除しますか？`))return;
+  ivSaveClients(ivClients().filter(x=>x.id!==id)); ivRenderClients(); }
+function ivRenderClients(){
+  const list=ivClients(); const tbl=document.getElementById('iv-clients-table'); const empty=document.getElementById('iv-clients-empty');
+  if(!list.length){ tbl.innerHTML=''; empty.style.display='block'; return; } empty.style.display='none';
+  tbl.innerHTML='<thead><tr><th>取引先名</th><th>担当者</th><th>住所</th><th>メール</th><th></th></tr></thead><tbody>'+
+    list.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.person||'')}</td><td style="font-size:11px">${esc(c.addr||'')}</td><td style="font-size:11px">${esc(c.email||'')}</td>
+      <td style="white-space:nowrap"><button class="btn-xs btn-xs-blue" onclick="ivEditClient('${c.id}')">✎</button>
+      <button class="btn-xs btn-xs-red" onclick="ivDeleteClient('${c.id}')">削除</button></td></tr>`).join('')+'</tbody>';
+}
+
+// ---- 自社設定 ----
+const IV_SFIELDS={'iv-s-name':'name','iv-s-person':'person','iv-s-addr':'addr','iv-s-tel':'tel','iv-s-email':'email','iv-s-regno':'regno','iv-s-bank':'bank','iv-s-filetpl':'fileTpl','iv-s-mailname':'mailName','iv-s-mailsubj':'mailSubj','iv-s-mailbody':'mailBody'};
+// ---- 採番規則エディタ（設定画面）----
+function ivMakeNumRuleRow(r,isDef){
+  const div=document.createElement('div');
+  div.className='iv-numrule-row';
+  div.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap';
+  div.innerHTML=`
+    <input type="radio" name="iv-nr-def" ${isDef?'checked':''} title="既定（新規作成時に使用）" style="width:auto;flex:none" onchange="ivTplPreview()">
+    <input class="nr-name" value="${esc(r.name||'')}" placeholder="規則名" style="width:120px;flex:none">
+    <input class="nr-tpl" value="${esc(r.tpl||'')}" placeholder="INV-{ym}-{seq3}" style="flex:1;min-width:150px" oninput="ivTplPreview()">
+    <span style="font-size:10px;color:#8a93a2;flex:none">次</span>
+    <input class="nr-seq" type="number" min="1" value="${(Number(r.seq)||0)+1}" style="width:72px;flex:none" oninput="ivTplPreview()">
+    <button class="btn-xs btn-xs-red" style="flex:none" onclick="this.closest('.iv-numrule-row').remove();ivTplPreview()">✕</button>`;
+  return div;
+}
+function ivRenderNumRules(){
+  const box=document.getElementById('iv-numrules'); if(!box) return;
+  const s=ivSettings();
+  const rules=ivNumRules(s); const def=Number(s.numRuleDef)||0;
+  box.innerHTML='';
+  rules.forEach((r,i)=>box.appendChild(ivMakeNumRuleRow(r,i===def)));
+  ivTplPreview();
+}
+function ivAddNumRule(){
+  document.getElementById('iv-numrules').appendChild(ivMakeNumRuleRow({name:'',tpl:'',seq:0},false));
+}
+// 設定画面のライブプレビュー（既定規則＋ファイル名）
+function ivTplPreview(){
+  const el=document.getElementById('iv-s-tpl-preview'); if(!el) return;
+  const rows=[...document.querySelectorAll('#iv-numrules .iv-numrule-row')];
+  let tpl='INV-{ym}-{seq3}', seq=1;
+  if(rows.length){
+    const r=rows.find(x=>x.querySelector('input[type=radio]').checked)||rows[0];
+    tpl=r.querySelector('.nr-tpl').value.trim()||'INV-{ym}-{seq3}';
+    seq=Number(r.querySelector('.nr-seq').value)||1;
+  }
+  const num=ivFillNumTpl(tpl,seq,new Date());
+  const ft=document.getElementById('iv-s-filetpl').value.trim()||'請求書_{number}';
+  const dd=ivDefaultDates();
+  const fname=ft
+    .replace(/\{number\}/g,num).replace(/\{clientName\}/g,'株式会社〇〇')
+    .replace(/\{company\}/g,document.getElementById('iv-s-name').value||(ivSettings().name||'')||'')
+    .replace(/\{subject\}/g,'◯月分').replace(/\{date\}/g,dd.date)
+    .replace(/\{ym\}/g,dd.date.slice(0,7).replace('-',''))
+    .replace(/\{month\}/g,`${dd.date.slice(0,4)}年${Number(dd.date.slice(5,7))}月`)
+    .replace(/[\\\/:*?\x22<>|]/g,'_')+'.pdf';
+  el.textContent=`例）既定規則の次番号: ${num}　／　ファイル名: ${fname}`;
+}
+let _ivAliases=null;
+function ivLoadSettingsForm(){
+  const s=ivSettings();
+  Object.entries(IV_SFIELDS).forEach(([id,k])=>{ const el=document.getElementById(id); if(el) el.value=s[k]||''; });
+  document.getElementById('iv-s-stamp').checked=!!s.stamp;
+  ivRenderStampPrev();
+  ivRenderNumRules();
+}
+function ivSaveSettings(){
+  const s=ivSettings();
+  Object.entries(IV_SFIELDS).forEach(([id,k])=>{ const el=document.getElementById(id); if(el) s[k]=el.value.trim(); });
+  s.stamp=document.getElementById('iv-s-stamp').checked;
+  const sz=Number(document.getElementById('iv-s-stampsize').value);
+  if(sz) s.stampSize=Math.min(90,Math.max(30,sz));
+  // 採番規則リストを回収（「次」欄は次に発番される番号なので内部seqは-1）
+  const rows=[...document.querySelectorAll('#iv-numrules .iv-numrule-row')];
+  const rules=[]; let def=0;
+  rows.forEach(r=>{
+    const tpl=r.querySelector('.nr-tpl').value.trim();
+    if(!tpl) return; // テンプレ空の行は無視
+    if(r.querySelector('input[type=radio]').checked) def=rules.length;
+    rules.push({name:r.querySelector('.nr-name').value.trim()||`規則${rules.length+1}`, tpl,
+                seq:Math.max(0,(Number(r.querySelector('.nr-seq').value)||1)-1)});
+  });
+  s.numRules=rules.length?rules:ivNumRules(s);
+  s.numRuleDef=Math.min(def, s.numRules.length-1);
+  delete s.numTpl;
+  ivSaveSettingsObj(s); notify('自社設定を保存しました');
+  ivRenderNumRules();
+}
+
+// ---- 印影画像（アップロード→自動縮小→設定に保存。サイズ上限対策で4万字以内に圧縮） ----
+function ivStampImgSelected(inp){
+  const f=inp.files[0]; inp.value=''; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      let size=240, dataUrl='';
+      while(size>=100){
+        const c=document.createElement('canvas');
+        const scale=Math.min(size/img.width, size/img.height, 1);
+        c.width=Math.max(1,Math.round(img.width*scale));
+        c.height=Math.max(1,Math.round(img.height*scale));
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        dataUrl=c.toDataURL('image/png');
+        if(dataUrl.length<40000) break;
+        size-=40;
+      }
+      if(!dataUrl || dataUrl.length>=40000){ notify('画像が複雑すぎて圧縮できません。背景透過の単純な印影PNGを使ってください','error'); return; }
+      const s=ivSettings(); s.stampImg=dataUrl; s.stamp=true;
+      ivSaveSettingsObj(s);
+      document.getElementById('iv-s-stamp').checked=true;
+      ivRenderStampPrev();
+      notify('印影画像を登録しました（プレビュー・PDF・メール添付に反映されます）');
+    };
+    img.onerror=()=>notify('画像を読み込めませんでした','error');
+    img.src=rd.result;
+  };
+  rd.readAsDataURL(f);
+}
+function ivRenderStampPrev(){
+  const s=ivSettings();
+  const p=document.getElementById('iv-s-stampimg-prev'), d=document.getElementById('iv-s-stampimg-del');
+  const w=document.getElementById('iv-s-stampsize-wrap'), sz=document.getElementById('iv-s-stampsize');
+  if(!p) return;
+  if(s.stampImg){ p.src=s.stampImg; p.style.display=''; d.style.display=''; if(w)w.style.display='inline-flex'; if(sz)sz.value=s.stampSize||50; }
+  else { p.style.display='none'; d.style.display='none'; if(w)w.style.display='none'; }
+}
+function ivStampSize(){ const v=Number(ivSettings().stampSize||50); return Math.min(90,Math.max(30,v)); }
+function ivDeleteStampImg(){
+  const s=ivSettings(); delete s.stampImg; ivSaveSettingsObj(s);
+  ivRenderStampPrev(); notify('印影画像を削除しました（チェックONなら角印風の自動生成に戻ります）');
+}
+
+// ---- 売上仕訳の自動起票（請求書→履歴セット） ----
+
+// ---- A4プレビュー ----
+function ivShowPreview(){
+  const inv=ivReadForm(); const s=ivSettings(); const t=ivCalc(inv);
+  const bank=inv.bank||s.bank||'';
+  const clientDisp=inv.clientName?`${esc(inv.clientName)} ${inv.honorific==='（なし）'?'':esc(inv.honorific)}`:'（取引先未選択）';
+  const client=ivClients().find(c=>c.id===inv.clientId);
+  const itemRows=inv.items.map(it=>{
+    const lines=String(it.name).split('\n');
+    const det=[...lines.slice(1),...String(it.note||'').split('\n')].filter(x=>x.trim());
+    const nameHtml=esc(lines[0])+(it.tax===8?' <span style="font-size:9px">※</span>':'')+(det.length?`<div class="item-detail">${det.map(esc).join('<br>')}</div>`:'');
+    return `<tr><td style="white-space:nowrap">${invSlash(it.date)}</td><td>${nameHtml}</td>
+      <td style="text-align:right">${invNum(it.price)}</td><td style="text-align:right">${it.qty}</td>
+      <td>${esc(it.unit)}</td><td style="text-align:right">${invNum(it.qty*it.price)}</td></tr>`;
+  }).join('');
+  const taxRows=t.detail.map(d=>`<tr><td>${d.rate===0?'非課税':d.rate+'%'}</td><td>${invNum(d.base)}</td><td>${invNum(d.tax)}</td><td>${invNum(d.base+d.tax)}</td></tr>`).join('');
+  const sname=s.name||(ivSettings().name||'')||'';
+  document.getElementById('iv-preview-page').innerHTML=`
+    <h1>請求書</h1>
+    <div class="inv-head">
+      <div class="inv-to"><div class="to-name">${clientDisp}</div>${client&&client.addr?`<div class="to-addr">${esc(client.addr)}</div>`:''}</div>
+      <div class="inv-from" style="${s.stamp&&s.stampImg?`padding-right:${ivStampSize()+8}px`:''}">
+        <div class="from-name">${esc(sname)}</div>
+        <div>${esc(s.addr||'')}</div>
+        ${s.tel?`<div>TEL: ${esc(s.tel)}</div>`:''}${s.email?`<div>${esc(s.email)}</div>`:''}
+        ${s.person?`<div>担当: ${esc(s.person)}</div>`:''}${s.regno?`<div>登録番号: ${esc(s.regno)}</div>`:''}
+        <div class="inv-nums">
+          <div><span class="k">請求書番号：</span>${esc(inv.number)}</div>
+          <div><span class="k">請求日：</span>${invSlash(inv.date)}</div>
+          <div><span class="k">お支払期限：</span>${invSlash(inv.due)}</div>
+        </div>
+        ${s.stamp?(s.stampImg?`<img class="stamp-img" src="${s.stampImg}" style="width:${ivStampSize()}px;height:${ivStampSize()}px">`:(sname?`<div class="stamp">${esc(sname.replace(/株式会社|合同会社|有限会社/g,'').trim().slice(0,4)||'印')}</div>`:'')):''}
+      </div>
+    </div>
+    <div class="subject-line">件名：${esc(inv.subject)}</div>
+    <div class="grand-box"><span class="lbl">ご請求金額</span><span class="amt">${invNum(t.grand)} 円</span></div>
+    <table class="items"><thead><tr>
+      <th style="width:13%">納品日</th><th style="width:39%">品目・納品書番号</th>
+      <th style="width:12%;text-align:right">単価</th><th style="width:10%;text-align:right">数量</th>
+      <th style="width:8%">単位</th><th style="width:18%;text-align:right">価格</th>
+    </tr></thead><tbody>${itemRows}</tbody></table>
+    ${inv.items.some(it=>it.tax===8)?'<div class="tax-note">※ は軽減税率(8%)対象</div>':''}
+    <div class="sum-flex">
+      <div class="tax-breakdown"><div class="tb-title">税率別内訳</div>
+        <table><thead><tr><th></th><th>税抜金額</th><th>消費税額</th><th>税込金額</th></tr></thead><tbody>${taxRows}</tbody></table></div>
+      <div class="sum-table">
+        <div class="srow"><span>小計</span><span>${invNum(t.subtotal)}</span></div>
+        <div class="srow"><span>消費税額合計</span><span>${invNum(t.tax)}</span></div>
+        ${t.withholding?`<div class="srow"><span>源泉徴収税額</span><span>−${invNum(t.withholding)}</span></div>`:''}
+        <div class="srow total"><span>合計</span><span>${invNum(t.grand)}</span></div>
+      </div>
+    </div>
+    ${bank?`<div class="box-label">振込先</div><div class="boxed">${esc(bank)}</div>`:''}
+    <div class="box-label">備考</div><div class="boxed">${esc(inv.notes)}</div>
+    <div class="page-num">1 / 1</div>`;
+  document.getElementById('invPreviewOverlay').classList.add('show');
+  ivFitPreview();
+}
+function ivHidePreview(){ document.getElementById('invPreviewOverlay').classList.remove('show'); var pg=document.getElementById('iv-preview-page'); if(pg) pg.style.zoom=''; }
+// ---- スマホ表示（v60）----
+function ivIsMobile(){ try{ return window.matchMedia('(max-width:820px)').matches; }catch(e){ return false; } }
+function ivFitPreview(){
+  var ov=document.getElementById('invPreviewOverlay'), pg=document.getElementById('iv-preview-page');
+  if(!ov||!pg) return;
+  pg.style.zoom='';
+  if(!ov.classList.contains('show')) return;
+  var avail=window.innerWidth-16, w=pg.offsetWidth;
+  if(w>avail) pg.style.zoom=String(Math.floor(avail/w*1000)/1000);
+}
+window.addEventListener('resize', function(){ ivFitPreview(); });
+function ivMoreToggle(force){
+  var m=document.getElementById('iv-mmore'); if(!m) return;
+  var on=(typeof force==='boolean')?force:!m.classList.contains('open');
+  m.classList.toggle('open', on);
+}
+document.addEventListener('click', function(e){
+  var m=document.getElementById('iv-mmore');
+  if(!m||!m.classList.contains('open')) return;
+  if(m.contains(e.target)||(e.target.closest&&e.target.closest('.iv-mb-more'))) return;
+  m.classList.remove('open');
+});
+var _ivPdfUrl='', _ivPdfName='';
+
+function ivExportJsonDownload(){
+  const data={appName:'MF会計仕訳ジェネレーター/請求書', exportedAt:new Date().toISOString(), company:(ivSettings().name||''),
+    invoices:ivInvoices(), clients:ivClients(), settings:ivSettings()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download=`請求書_${(ivSettings().name||'')}_${invToday()}.json`; a.click(); URL.revokeObjectURL(url);
+  notify('請求書データをエクスポートしました');
+}
+
+// ---- 二段階送信（手動）: PDFダウンロード＋メール文コピー → スマホGmailアプリ等で送信 ----
+function ivCopyMailText(){
+  const inv=ivReadForm();
+  if(!inv.clientName){ notify('取引先を選択してください','error'); return; }
+  const t=ivCalc(inv);
+  const s=ivSettings();
+  const client=ivClients().find(c=>c.id===inv.clientId);
+  document.getElementById('iv-cp-to').value=(client&&client.email)||'';
+  document.getElementById('iv-cp-subject').value=ivFillTemplate(s.mailSubj||'【{company}】{month}分 請求書のご送付', inv, t);
+  document.getElementById('iv-cp-body').value=ivFillTemplate(s.mailBody||'{clientName} 御中\n\nいつもお世話になっております。{company}です。\n{month}分の請求書をお送りいたします。\nご査収のほどよろしくお願いいたします。\n\n請求金額: {grand} 円（お支払期限: {due}）', inv, t);
+  document.getElementById('iv-copy-overlay').classList.add('open');
+}
+function ivCloseCopy(){ document.getElementById('iv-copy-overlay').classList.remove('open'); }
+// Gmailに下書き作成（宛先・件名・本文・PDF添付済み）→ スマホのGmailアプリ→下書き→送信
+function ivCopyField(id,btn){
+  const el=document.getElementById(id);
+  const text=el.value;
+  const done=()=>{ const t=btn.textContent; btn.textContent='✓ コピー済み'; setTimeout(()=>btn.textContent=t,1500); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{ el.select?.(); document.execCommand('copy'); done(); });
+  } else { el.focus(); el.select?.(); document.execCommand('copy'); done(); }
+}
+
+// ---- メール送信（PDF添付・法人ごとの送信元エイリアス） ----
+// GASのHTML→PDF変換はflex非対応のことがあるため、テーブルレイアウトの送付専用HTMLを生成する
+
+function ivFillTemplate(tpl, inv, t){
+  const s=ivSettings();
+  const m=(inv.date||'').slice(0,7).split('-');
+  const month=m.length===2?`${m[0]}年${Number(m[1])}月`:'';
+  return String(tpl||'')
+    .replace(/\{clientName\}/g, inv.clientName||'')
+    .replace(/\{company\}/g, s.name||(ivSettings().name||'')||'')
+    .replace(/\{number\}/g, inv.number||'')
+    .replace(/\{subject\}/g, inv.subject||'')
+    .replace(/\{month\}/g, month)
+    .replace(/\{grand\}/g, invNum(t.grand))
+    .replace(/\{due\}/g, invSlash(inv.due));
+}
+function ivMailTexts(inv){
+  const s=ivSettings(); const t=ivCalc(inv);
+  return {
+    subject:ivFillTemplate(s.mailSubj||'【{company}】{month}分 請求書のご送付', inv, t),
+    body:ivFillTemplate(s.mailBody||'{clientName} 御中\n\nいつもお世話になっております。{company}です。\n{month}分の請求書をお送りいたします。\nご査収のほどよろしくお願いいたします。\n\n請求金額: {grand} 円（お支払期限: {due}）', inv, t)
+  };
+}
+
+// ---- 予約送信 ----
+let _ivSchedCache=[];
+let _ivJustSavedNumber='';
+// 比較用の指紋（Code.js の _htmlFp と同じ式）
+// 予約1件と原本（同じ請求書番号の保存済み請求書）を比べる: same / diff / miss / none
+// ---- 送信予約の内容確認（v61） ----
+var _ivSpv=null;   // {d:予約の中身, inv:原本, curHtml:原本の最新HTML, state, view}
+// 請求書HTMLを「比べられる行」のリストにする（明細・内訳は1行＝1件、その他は文字のかたまり単位）
+// 2つの行リストの差（多重集合の差）
+
+// ---- 予約の変更（pendingのみ。日時・宛先・CC・件名・本文） ----
+let _ivSchedEditId=null;
+
+// ============================================================
+
+// ============================================================
+//  スマホ版：端末の中でPDFを作り、共有メニュー（Gmail等）で送る
+// ============================================================
+var IVM_CDN = 'https:' + '/' + '/cdnjs.cloudflare.com/ajax/libs/';
+var IVM_LIBS = [IVM_CDN + 'html2canvas/1.4.1/html2canvas.min.js', IVM_CDN + 'jspdf/2.5.1/jspdf.umd.min.js'];
+var _ivmLibP = null;
+function ivmLoadLibs(){
+  if(window.html2canvas && window.jspdf) return Promise.resolve();
+  if(_ivmLibP) return _ivmLibP;
+  _ivmLibP = new Promise(function(res, rej){
+    var i = 0;
+    function next(){
+      if(i >= IVM_LIBS.length){ res(); return; }
+      var s = document.createElement('script');
+      s.src = IVM_LIBS[i++]; s.onload = next;
+      s.onerror = function(){ _ivmLibP = null; rej(new Error('PDF作成の部品を読み込めませんでした。インターネットにつながる所でもう一度お試しください')); };
+      document.head.appendChild(s);
+    }
+    next();
+  });
+  return _ivmLibP;
+}
+function ivmBusy(on, msg){
+  var el = document.getElementById('ivm-busy');
+  if(!el){
+    el = document.createElement('div'); el.id = 'ivm-busy';
+    el.innerHTML = '<div class="ivm-spin"></div><div class="ivm-msg"></div>';
+    document.body.appendChild(el);
+  }
+  el.querySelector('.ivm-msg').textContent = msg || '';
+  el.style.display = on ? 'flex' : 'none';
+}
+// A4プレビューの複製を画像にする
+function ivmRender(){
+  var src = document.getElementById('iv-preview-page');
+  var host = document.createElement('div');
+  host.style.cssText = 'position:absolute;left:0;top:0;width:794px;background:#fff;z-index:-1';
+  var el = src.cloneNode(true);
+  el.removeAttribute('id');
+  el.style.zoom = ''; el.style.width = '794px'; el.style.minHeight = '1123px'; el.style.margin = '0'; el.style.boxShadow = 'none';
+  var pn = el.querySelector('.page-num'); if(pn) pn.parentNode.removeChild(pn);
+  host.appendChild(el); document.body.appendChild(host);
+  var sy = window.scrollY; window.scrollTo(0, 0);
+  var H = el.offsetHeight, top = el.getBoundingClientRect().top, cuts = [];
+  var list = el.querySelectorAll('h1,.inv-head,.subject-line,.grand-box,table.items tr,.tax-note,.sum-flex,.boxed');
+  for(var i = 0; i < list.length; i++) cuts.push(list[i].getBoundingClientRect().bottom - top);
+  cuts.sort(function(a, b){ return a - b; });
+  var S = Math.min(2, Math.sqrt(15000000 / (794 * H)), 30000 / H);
+  var done = function(){ if(host.parentNode) host.parentNode.removeChild(host); window.scrollTo(0, sy); };
+  return window.html2canvas(el, {scale:S, backgroundColor:'#ffffff', useCORS:true, logging:false, windowWidth:1000, scrollX:0, scrollY:0})
+    .then(function(cv){ done(); return {canvas:cv, H:H, S:cv.width / 794, cuts:cuts}; }, function(e){ done(); throw e; });
+}
+// ページ分け（行の途中で切らない）。単位はpx（A4幅=794px）
+function ivmPages(H, cuts){
+  var PH = 794 * 297 / 210, M = 12 * 794 / 210;
+  var end = cuts.length ? cuts[cuts.length - 1] + 8 : H;
+  if(end <= PH) return [{s:0, e:Math.min(PH, H), y:0}];
+  var pages = [], s = 0, first = true;
+  while(s < end - 2){
+    var lim = s + (first ? PH - M : PH - 2 * M), e = lim;
+    if(lim < end){
+      var best = 0;
+      for(var i = 0; i < cuts.length; i++){ if(cuts[i] > s + 40 && cuts[i] <= lim) best = cuts[i]; }
+      if(best) e = best;
+    } else e = end;
+    pages.push({s:s, e:e, y:first ? 0 : M});
+    s = e; first = false;
+  }
+  return pages;
+}
+function ivmMakePdf(r){
+  var pdf = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
+  var pages = ivmPages(r.H, r.cuts), k = 210 / 794, firstImg = '';
+  for(var i = 0; i < pages.length; i++){
+    var p = pages[i];
+    var sy = Math.round(p.s * r.S), sh = Math.min(r.canvas.height - sy, Math.round((p.e - p.s) * r.S));
+    var c = document.createElement('canvas'); c.width = r.canvas.width; c.height = sh;
+    var g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(r.canvas, 0, sy, r.canvas.width, sh, 0, 0, c.width, sh);
+    var img = c.toDataURL('image/jpeg', 0.9);
+    if(i === 0) firstImg = img; else pdf.addPage();
+    pdf.addImage(img, 'JPEG', 0, p.y * k, 210, sh / r.S * k);
+    pdf.setFontSize(9); pdf.setTextColor(102); pdf.text((i + 1) + ' / ' + pages.length, 105, 289, {align:'center'});
+  }
+  return {bytes:new Uint8Array(pdf.output('arraybuffer')), preview:firstImg, pages:pages.length};
+}
+// 保存（送らなくても請求書は残す）
+function ivmSaveQuiet(inv){
+  var list = ivInvoices(), idx = -1;
+  for(var i = 0; i < list.length; i++){ if(list[i].id === inv.id){ idx = i; break; } }
+  if(idx >= 0) list[idx] = inv; else list.push(inv);
+  _ivCurrentId = inv.id; ivSaveInvoices(list);
+  var info = document.getElementById('iv-edit-info'); if(info) info.textContent = '編集中: ' + inv.number;
+}
+// 「📤 PDFを作って送る」
+function ivDownloadPdf(){
+  var inv = ivReadForm();
+  if(!inv.clientName){ notify('取引先を選択してください', 'error'); return; }
+  if(!inv.number){ notify('請求書番号を入力してください', 'error'); return; }
+  if(!ivCalc(inv).subtotal){ notify('明細がありません', 'error'); return; }
+  ivmSaveQuiet(inv);
+  var ov = document.getElementById('invPreviewOverlay'), wasOpen = ov.classList.contains('show');
+  ivmBusy(true, 'PDFを作成中…');
+  ivmLoadLibs().then(function(){
+    ivShowPreview();
+    return ivmRender();
+  }).then(function(r){
+    if(!wasOpen) ivHidePreview();
+    var out = ivmMakePdf(r), mt = ivMailTexts(inv);
+    var cli = ivClients().find(function(c){ return c.id === inv.clientId; });
+    ivmBusy(false);
+    ivmSheet({bytes:out.bytes, name:ivFileName(inv), preview:out.preview, pages:out.pages, invId:inv.id,
+      to:(cli && cli.email) || '', subject:mt.subject, body:mt.body});
+  }).catch(function(e){
+    ivmBusy(false); if(!wasOpen) ivHidePreview();
+    notify('PDFを作れませんでした: ' + ((e && e.message) || e), 'error');
+  });
+}
+var _ivmD = null, _ivmFile = null, _ivmUrl = '';
+function ivmSheet(d){
+  _ivmD = d;
+  if(_ivmUrl){ try{ URL.revokeObjectURL(_ivmUrl); }catch(e){} }
+  _ivmUrl = URL.createObjectURL(new Blob([d.bytes], {type:'application/pdf'}));
+  _ivmFile = null;
+  try{ _ivmFile = new File([d.bytes], d.name, {type:'application/pdf'}); }catch(e){}
+  var canShare = false;
+  try{ canShare = !!(_ivmFile && navigator.canShare && navigator.canShare({files:[_ivmFile]})); }catch(e){}
+  document.getElementById('ivm-name').textContent = d.name + (d.pages > 1 ? '（' + d.pages + 'ページ）' : '');
+  document.getElementById('ivm-prev').src = d.preview;
+  document.getElementById('ivm-share').style.display = canShare ? '' : 'none';
+  document.getElementById('ivm-note').textContent = canShare
+    ? '共有メニューで「Gmail」や「メール」（iPhone）、「ドコモメール」「auメール」等を選ぶと、PDFが添付された状態で開きます。宛先を入れて送信してください。'
+    : 'このブラウザは共有に対応していません。「⬇ PDFを保存」してから、メールアプリで添付してください。';
+  document.getElementById('ivm-sent-msg').textContent = '';
+  document.getElementById('ivm-overlay').classList.add('open');
+}
+function ivmClose(){ document.getElementById('ivm-overlay').classList.remove('open'); }
+function ivmShare(){
+  if(!_ivmFile) return;
+  var data = {files:[_ivmFile]};
+  if(_ivmD.subject) data.title = _ivmD.subject;
+  if(_ivmD.body && !ivmShare.noText) data.text = _ivmD.body;
+  navigator.share(data).then(function(){
+    document.getElementById('ivm-sent-msg').textContent = '送れたら「✓ 送付済みにする」を押してください';
+  }).catch(function(e){
+    if(e && e.name === 'AbortError') return;
+    ivmShare.noText = true;
+    notify('共有できませんでした（' + ((e && e.name) || e) + '）。もう一度押すか「⬇ PDFを保存」をお使いください', 'error');
+  });
+}
+function ivmSavePdf(){
+  var a = document.createElement('a'); a.href = _ivmUrl; a.download = _ivmD.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  notify('保存しました。ダウンロード（ファイル）を確認してください');
+}
+function ivmMailApp(){
+  var u = 'mailto:' + encodeURIComponent(_ivmD.to) + '?subject=' + encodeURIComponent(_ivmD.subject) + '&body=' + encodeURIComponent(_ivmD.body);
+  location.href = u;
+}
+function ivmCopyTexts(){ ivmClose(); ivCopyMailText(); }
+function ivmMarkSent(){
+  var list = ivInvoices(), hit = false;
+  for(var i = 0; i < list.length; i++){ if(list[i].id === _ivmD.invId){ list[i].status = 'sent'; hit = true; } }
+  if(!hit) return;
+  ivSaveInvoices(list);
+  if(_ivCurrentId === _ivmD.invId){ var st = document.getElementById('iv-f-status'); if(st) st.value = 'sent'; }
+  try{ ivRenderList(); }catch(e){}
+  document.getElementById('ivm-sent-msg').textContent = '✓ 送付済みにしました';
+}
+// バックアップ：共有できる端末（iPhone等）は共有メニュー（「ファイルに保存」等）、できなければダウンロード
+function ivExportJson(){
+  var data = {appName:'請求書作成', exportedAt:new Date().toISOString(), invoices:ivInvoices(), clients:ivClients(), settings:ivSettings()};
+  var name = '請求書バックアップ_' + invToday().split('-').join('') + '.json';
+  var f = null, ok = false;
+  try{ f = new File([JSON.stringify(data, null, 1)], name, {type:'application/json'}); }catch(e){}
+  try{ ok = !!(f && navigator.canShare && navigator.canShare({files:[f]})); }catch(e){}
+  if(!ok){ ivExportJsonDownload(); return; }
+  navigator.share({files:[f], title:name}).then(function(){ notify('バックアップを保存しました'); }).catch(function(e){
+    if(e && e.name === 'AbortError') return;
+    ivExportJsonDownload();
+  });
+}
+// 明細の品目名・詳細メモ欄を、中身の行数に合わせて自動で伸ばす（2行目以降が隠れないように）
+function ivmGrow(t){ if(!t || t.tagName !== 'TEXTAREA') return; t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
+function ivmGrowAll(){ var l = document.querySelectorAll('#iv-items-body textarea'); for(var i = 0; i < l.length; i++) ivmGrow(l[i]); }
+document.addEventListener('input', function(e){ if(e.target && e.target.closest && e.target.closest('#iv-items-body')) ivmGrow(e.target); });
+window.addEventListener('DOMContentLoaded', function(){
+  var tb = document.getElementById('iv-items-body');
+  if(tb && window.MutationObserver) new MutationObserver(function(){ setTimeout(ivmGrowAll, 0); }).observe(tb, {childList:true});
+});
+window.addEventListener('resize', function(){ ivmGrowAll(); });
+// 起動後しばらくしてPDF部品を先読み（初回の待ち時間を短くする）
+window.addEventListener('load', function(){ setTimeout(function(){ ivmLoadLibs().catch(function(){}); }, 2500); });
+
+</script>
+</body>
+</html>
